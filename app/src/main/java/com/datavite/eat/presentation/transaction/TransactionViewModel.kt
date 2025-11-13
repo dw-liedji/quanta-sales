@@ -137,8 +137,8 @@ class TransactionViewModel @Inject constructor(
                 resetTransactionForm()
                 showInfoMessage("Transaction created successfully")
 
-                // Haptic feedback for success
-                // Note: You'll need to pass haptic feedback from composable
+                // Sync with server
+                authOrgUser.value?.let { syncOrchestrator.push(it.orgSlug) }
 
             } catch (e: Exception) {
                 showErrorMessage("Failed to create transaction: ${e.message}")

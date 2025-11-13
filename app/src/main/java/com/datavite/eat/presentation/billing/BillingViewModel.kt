@@ -165,17 +165,13 @@ class BillingViewModel @Inject constructor(
 
                     transactionRepository.createTransaction(newTransaction)
 
-
                     _billingUiState.update { it.copy(selectedBilling = updatedBilling) }
-
-
 
                     hidePaymentSheet()
                     showInfoMessage("Payment of $amount FCFA added successfully")
 
                     // Sync with server
-                    authOrgUser.value?.orgSlug?.let { syncOrchestrator.push(it) }
-
+                    authOrgUser.value?.let { syncOrchestrator.push(it.orgSlug) }
                 }
 
             } catch (e: Exception) {

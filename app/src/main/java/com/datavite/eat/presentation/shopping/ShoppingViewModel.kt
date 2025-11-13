@@ -470,6 +470,9 @@ class ShoppingViewModel @Inject constructor(
                             )
                         }
                         showInfoMessage("Facture créée avec paiement initial!")
+
+                        // Sync with server
+                        authOrgUser.let { syncOrchestrator.push(it.orgSlug) }
                     }
                 }
             } catch (e: Exception) {
