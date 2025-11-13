@@ -1,0 +1,270 @@
+package com.datavite.eat.presentation.billing
+
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
+import com.datavite.eat.data.local.model.SyncStatus
+import com.datavite.eat.data.notification.NotificationOrchestrator
+import com.datavite.eat.data.notification.TextToSpeechNotifier
+import com.datavite.eat.data.remote.model.auth.AuthOrgUser
+import com.datavite.eat.data.sync.SyncOrchestrator
+import com.datavite.eat.domain.model.DomainBilling
+import com.datavite.eat.domain.model.DomainBillingPayment
+import com.datavite.eat.domain.model.DomainTransaction
+import com.datavite.eat.domain.notification.NotificationBus
+import com.datavite.eat.domain.notification.NotificationEvent
+import com.datavite.eat.domain.repository.BillingRepository
+import com.datavite.eat.domain.repository.TransactionRepository
+import com.datavite.eat.utils.TransactionBroker
+import com.datavite.eat.utils.TransactionType
+import com.datavite.eat.utils.generateUUIDString
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import javax.inject.Inject
+
+@HiltViewModel
+class BillingViewModel @Inject constructor(
+    private val authOrgUserCredentialManager: AuthOrgUserCredentialManager,
+    private val billingRepository: BillingRepository,
+    private val transactionRepository: TransactionRepository,
+    private val syncOrchestrator: SyncOrchestrator,
+    private val notificationBus: NotificationBus,
+    private val textToSpeechNotifier: TextToSpeechNotifier,
+    private val notificationOrchestrator: NotificationOrchestrator,
+) : ViewModel() {
+
+    private val _billingUiState = MutableStateFlow(BillingUiState())
+    val billingUiState: StateFlow<BillingUiState> = _billingUiState.asStateFlow()
+
+    private val _authOrgUser = MutableStateFlow<AuthOrgUser?>(null)
+    val authOrgUser: StateFlow<AuthOrgUser?> = _authOrgUser
+
+    init {
+        Log.d("BillingViewModel", "Initialized")
+        observeOrganization()
+        observeLocalBillingsData()
+    }
+
+    private fun observeOrganization() = viewModelScope.launch(Dispatchers.IO) {
+        authOrgUserCredentialManager.sharedAuthOrgUserFlow
+            .collectLatest { authOrgUser ->
+                authOrgUser?.let {
+                    Log.i("billing_consumer", "token changed from consumer ${it.orgSlug}")
+                    _authOrgUser.value = it
+                    syncLocalDataWithServer(it.orgSlug)
+                }
+            }
+    }
+
+    private fun observeLocalBillingsData() {
+        viewModelScope.launch {
+            billingRepository.getDomainBillingsFlow()
+                .catch { it.printStackTrace() }
+                .collect { loadBillings(it) }
+        }
+    }
+
+    fun syncLocalDataWithServer(organization: String) {
+        viewModelScope.launch {
+            try {
+                _billingUiState.update { it.copy(isLoading = true) }
+                syncOrchestrator.push(organization)
+                notificationOrchestrator.notify(organization)
+                syncOrchestrator.pullAllInParallel(organization)
+            } catch (e: Exception) {
+                _billingUiState.update { it.copy(errorMessage = e.message, isLoading = false) }
+            } finally {
+                _billingUiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun onRefresh() {
+        Log.i("billing_refresh", "refreshing billing data")
+        authOrgUser.value?.let {
+            syncLocalDataWithServer(it.orgSlug)
+        }
+    }
+
+    // -------------------------
+    // Billing Selection
+    // -------------------------
+    fun selectBilling(billing: DomainBilling) {
+        _billingUiState.update { it.copy(selectedBilling = billing) }
+    }
+
+    fun unselectBilling() {
+        _billingUiState.update {
+            it.copy(
+                selectedBilling = null,
+                isPaymentSheetVisible = false,
+                isDeleteDialogVisible = false
+            )
+        }
+    }
+
+    // -------------------------
+    // Payment Management
+    // -------------------------
+    fun showPaymentSheet() {
+        _billingUiState.update { it.copy(isPaymentSheetVisible = true) }
+    }
+
+    fun hidePaymentSheet() {
+        _billingUiState.update { it.copy(isPaymentSheetVisible = false) }
+    }
+
+    fun addPayment(amount: Double, transactionBroker: TransactionBroker) {
+        val selectedBilling = _billingUiState.value.selectedBilling ?: return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val orgUser = _authOrgUser.value
+                if(orgUser != null) {
+                    val newPayment = DomainBillingPayment(
+                        id = generateUUIDString(),
+                        created = LocalDateTime.now().toString(),
+                        modified = LocalDateTime.now().toString(),
+                        orgSlug = orgUser.orgSlug,
+                        orgId = orgUser.orgId,
+                        orgUserId = orgUser.id,
+                        amount=amount,
+                        billingId = selectedBilling.id,
+                        transactionBroker = transactionBroker,
+                        syncStatus = SyncStatus.PENDING)
+
+                    val updatedBilling = selectedBilling.copy(
+                        payments = selectedBilling.payments + newPayment
+                    )
+
+                    billingRepository.updateBilling(updatedBilling)
+
+                    val newTransaction = DomainTransaction(
+                        id = generateUUIDString(),
+                        created = LocalDateTime.now().toString(),
+                        modified = LocalDateTime.now().toString(),
+                        orgSlug = orgUser.orgSlug,
+                        orgId = orgUser.orgId,
+                        orgUserId = orgUser.id,
+                        participant = updatedBilling.customerName,
+                        reason = "Paiement dette facture #${updatedBilling.billNumber} de ${updatedBilling.customerName}",
+                        amount = amount,
+                        transactionType = TransactionType.DEPOSIT,
+                        transactionBroker = transactionBroker,
+                        syncStatus = SyncStatus.PENDING
+                    )
+
+                    transactionRepository.createTransaction(newTransaction)
+
+
+                    _billingUiState.update { it.copy(selectedBilling = updatedBilling) }
+
+
+
+                    hidePaymentSheet()
+                    showInfoMessage("Payment of $amount FCFA added successfully")
+
+                    // Sync with server
+                    authOrgUser.value?.orgSlug?.let { syncOrchestrator.push(it) }
+
+                }
+
+            } catch (e: Exception) {
+                showErrorMessage("Failed to add payment: ${e.message}")
+            }
+        }
+    }
+
+    fun deletePayment(domainBillingPayment: DomainBillingPayment) {
+        val selectedBilling = _billingUiState.value.selectedBilling ?: return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val updatedBilling = selectedBilling.copy(
+                    payments = selectedBilling.payments.filter { it.id != domainBillingPayment.id }
+                )
+
+                billingRepository.updateBilling(updatedBilling)
+                _billingUiState.update { it.copy(selectedBilling = updatedBilling) }
+                showInfoMessage("Payment deleted successfully")
+
+                // Sync with server
+                authOrgUser.value?.orgSlug?.let { syncOrchestrator.push(it) }
+
+            } catch (e: Exception) {
+                showErrorMessage("Failed to delete payment: ${e.message}")
+            }
+        }
+    }
+
+    // -------------------------
+    // Billing Deletion
+    // -------------------------
+    fun showDeleteDialog() {
+        _billingUiState.update { it.copy(isDeleteDialogVisible = true) }
+    }
+
+    fun hideDeleteDialog() {
+        _billingUiState.update { it.copy(isDeleteDialogVisible = false) }
+    }
+
+    fun deleteSelectedBilling() {
+        val selectedBilling = _billingUiState.value.selectedBilling ?: return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                billingRepository.deleteBilling(selectedBilling)
+                _billingUiState.update {
+                    it.copy(
+                        selectedBilling = null,
+                        isDeleteDialogVisible = false
+                    )
+                }
+                showInfoMessage("Bill #${selectedBilling.billNumber} deleted successfully")
+
+                // Sync with server
+                authOrgUser.value?.orgSlug?.let { syncOrchestrator.push(it) }
+
+            } catch (e: Exception) {
+                showErrorMessage("Failed to delete bill: ${e.message}")
+            }
+        }
+    }
+
+    // -------------------------
+    // Data Loading
+    // -------------------------
+    fun loadBillings(billings: List<DomainBilling>) {
+        _billingUiState.update { it.copy(availableBillings = billings, isLoading = false) }
+    }
+
+    // -------------------------
+    // Message Management
+    // -------------------------
+    fun clearErrorMessage() {
+        _billingUiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun clearInfoMessage() {
+        _billingUiState.update { it.copy(infoMessage = null) }
+    }
+
+    fun showInfoMessage(message: String) {
+        _billingUiState.update { it.copy(infoMessage = message) }
+        textToSpeechNotifier.speak(NotificationEvent.Success(message))
+    }
+
+    fun showErrorMessage(message: String) {
+        _billingUiState.update { it.copy(errorMessage = message) }
+        textToSpeechNotifier.speak(NotificationEvent.Failure(message))
+    }
+}

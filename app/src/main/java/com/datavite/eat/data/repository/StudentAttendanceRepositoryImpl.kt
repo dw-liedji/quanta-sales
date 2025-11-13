@@ -1,0 +1,115 @@
+package com.datavite.eat.data.repository
+
+import android.util.Log
+import com.datavite.eat.data.local.dao.PendingOperationDao
+import com.datavite.eat.data.local.datasource.StudentAttendanceLocalDataSource
+import com.datavite.eat.data.local.model.PendingOperation
+import com.datavite.eat.data.local.model.SyncStatus
+import com.datavite.eat.data.mapper.StudentAttendanceMapper
+import com.datavite.eat.data.remote.datasource.StudentAttendanceRemoteDataSource
+import com.datavite.eat.domain.PendingOperationEntityType
+import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.domain.model.DomainStudentAttendance
+import com.datavite.eat.domain.repository.StudentAttendanceRepository
+import com.datavite.eat.utils.JsonConverter
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+
+class StudentAttendanceRepositoryImpl @Inject constructor (
+    private val localDataSource: StudentAttendanceLocalDataSource,
+    private val remoteDataSource: StudentAttendanceRemoteDataSource,
+    private val studentAttendanceMapper: StudentAttendanceMapper,
+    private val pendingOperationDao: PendingOperationDao,
+    ) : StudentAttendanceRepository {
+
+    // ✅ Local create (no sync)
+    override suspend fun createAttendance(attendance: DomainStudentAttendance) {
+        val pendingDomainStudentAttendance = attendance.copy(syncStatus = SyncStatus.PENDING)
+        val local = studentAttendanceMapper.mapDomainToLocal(pendingDomainStudentAttendance)
+        val remote = studentAttendanceMapper.mapDomainToRemote(pendingDomainStudentAttendance)
+
+        val operation = PendingOperation(
+            orgSlug = attendance.orgSlug,
+            entityId = attendance.id,
+            entityType = PendingOperationEntityType.Attendance,
+            operationType = PendingOperationType.CREATE,
+            payloadJson = JsonConverter.toJson(remote),
+        )
+
+        localDataSource.saveAttendance(local)
+        pendingOperationDao.insert(operation)
+    }
+
+    // ✅ Local update (no sync)
+    override suspend fun updateAttendance(attendance: DomainStudentAttendance) {
+        val pendingDomainStudentAttendance = attendance.copy(syncStatus = SyncStatus.PENDING)
+        val local = studentAttendanceMapper.mapDomainToLocal(pendingDomainStudentAttendance)
+        val remote = studentAttendanceMapper.mapDomainToRemote(pendingDomainStudentAttendance)
+
+        val operation = PendingOperation(
+            orgSlug = attendance.orgSlug,
+            entityId = attendance.id,
+            entityType = PendingOperationEntityType.Attendance,
+            operationType = PendingOperationType.UPDATE,
+            payloadJson = JsonConverter.toJson(remote),
+        )
+
+        localDataSource.saveAttendance(local)
+        pendingOperationDao.insert(operation)
+    }
+
+    // ✅ Local delete (no sync)
+    override suspend fun deleteAttendance(attendance: DomainStudentAttendance) {
+        val pendingDomainStudentAttendance = attendance.copy(syncStatus = SyncStatus.PENDING)
+        val local = studentAttendanceMapper.mapDomainToLocal(pendingDomainStudentAttendance)
+        val remote = studentAttendanceMapper.mapDomainToRemote(pendingDomainStudentAttendance)
+
+        val operation = PendingOperation(
+            orgSlug = attendance.orgSlug,
+            entityId = attendance.id,
+            entityType = PendingOperationEntityType.Attendance,
+            operationType = PendingOperationType.DELETE,
+            payloadJson = JsonConverter.toJson(remote),
+        )
+
+        localDataSource.deleteAttendance(attendance.id)
+        pendingOperationDao.insert(operation)
+    }
+
+    // ✅ Queries (all local)
+    override suspend fun getAttendanceByStudentIdAndSessionId(studentId: String, sessionId:String): DomainStudentAttendance? {
+        return  localDataSource.getAttendanceByStudentIdAndSessionId(studentId, sessionId)?.let {
+            studentAttendanceMapper.mapLocalToDomain(it)
+        }
+    }
+
+    override suspend fun getAttendancesAsFlow(): Flow<List<DomainStudentAttendance>> {
+        return localDataSource.getAttendancesAsFlow().map { attendances ->
+            attendances.map { studentAttendanceMapper.mapLocalToDomain(it) }
+        }
+    }
+
+    override suspend fun getAttendancesFor(searchQuery: String): List<DomainStudentAttendance> {
+        return localDataSource.getSearchAttendancesFor(searchQuery).map { studentAttendanceMapper.mapLocalToDomain(it) }
+    }
+
+    override suspend fun getAttendanceBySessionId(sessionId: String): List<DomainStudentAttendance> {
+        return localDataSource.getAttendanceBySessionId(sessionId).map { studentAttendanceMapper.mapLocalToDomain(it) }
+    }
+
+    override suspend fun fetchIfEmpty(organization: String) {
+        try {
+            if (localDataSource.getAttendanceCount() == 0){
+                val remoteSessions = remoteDataSource.getAttendances(organization)
+                val domainSessions = remoteSessions.map { studentAttendanceMapper.mapRemoteToDomain(it) }
+                val localSessions = domainSessions.map { studentAttendanceMapper.mapDomainToLocal(it) }
+                localDataSource.clear()
+                localDataSource.saveAttendances(localSessions)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.e("TeachingSessionRepository", " error ${e.message}")
+        }
+    }
+}
