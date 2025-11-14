@@ -5,8 +5,11 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.datavite.eat.data.local.dao.PendingOperationDao
 import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
+import com.datavite.eat.data.local.model.PendingOperation
 import com.datavite.eat.data.local.model.SyncStatus
+import com.datavite.eat.data.network.NetworkStatusMonitor
 import com.datavite.eat.data.notification.NotificationOrchestrator
 import com.datavite.eat.data.notification.TextToSpeechNotifier
 import com.datavite.eat.data.remote.model.auth.AuthOrgUser
@@ -47,6 +50,8 @@ class ShoppingViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val customerRepository: CustomerRepository,
     private val syncOrchestrator: SyncOrchestrator,
+    private val networkStatusMonitor: NetworkStatusMonitor,
+    private val pendingOperationDao: PendingOperationDao,
     private val notificationBus: NotificationBus,
     private val textToSpeechNotifier: TextToSpeechNotifier,
     private val notificationOrchestrator: NotificationOrchestrator,
@@ -64,9 +69,24 @@ class ShoppingViewModel @Inject constructor(
     init {
         Log.d("ContributeViewModel", "Initialized")
         observeOrganization()
+        observePendingOperations()
         observeLocalStocksData()
         observeLocalCustomersData() // NEW: Observe customers
         observeNotificationBus()
+        observeNetwork()
+    }
+
+    private fun observeNetwork() =  viewModelScope.launch(Dispatchers.IO) {
+        authOrgUserCredentialManager.sharedAuthOrgUserFlow
+            .collectLatest { authOrgUser ->
+                authOrgUser?.let { orgUser ->
+                    Log.i("cameinet_first_comsummer","token changed from cosumer student ${orgUser.orgSlug}")
+                    _authOrgUser.value = orgUser
+                    networkStatusMonitor.isConnected.collectLatest {
+                        if (it) pushLocalChanges(orgUser.orgSlug)
+                    }
+                }
+            }
     }
 
     private fun observeOrganization() = viewModelScope.launch(Dispatchers.IO) {
@@ -469,6 +489,11 @@ class ShoppingViewModel @Inject constructor(
                                 paymentBroker = null
                             )
                         }
+
+                        _shoppingUiState.update { it.copy(lastestBilling = newBilling) }
+                        delay(300)
+                        _shoppingUiState.update { it.copy(lastestBilling = null) }
+
                         showInfoMessage("Facture créée avec paiement initial!")
 
                         // Sync with server
@@ -645,6 +670,67 @@ class ShoppingViewModel @Inject constructor(
         }
     }
 
+     fun observePendingOperations() {
+         viewModelScope.launch {
+             authOrgUserCredentialManager.sharedAuthOrgUserFlow.collectLatest {
+                 authOrgUser ->
+                 pendingOperationDao.getAllPendingOperationsFlow().collect {
+                         pendingOperations ->
+                     _shoppingUiState.update {
+                         it.copy(
+                             pendingOperations = pendingOperations,
+                             isSyncing = false
+                         )
+                     }
+                 }
+             }
+         }
+     }
+
+    // Version améliorée de manualSync
+    fun manualSync() {
+
+        val authUser = _authOrgUser.value
+        if (authUser == null) {
+            showErrorMessage("Impossible de synchroniser: utilisateur non connecté")
+            return
+        }
+
+        pushLocalChanges(authUser.orgSlug)
+        Log.i("ShoppingViewModel", "🔄 Manual sync initiated")
+    }
+
+    private fun pushLocalChanges(organization:String) {
+        viewModelScope.launch {
+
+            try {
+                // Mettre à jour l'état de synchronisation
+                _shoppingUiState.update { it.copy(isSyncing = true) }
+
+                Log.d("ShoppingViewModel", "Starting sync for org: ${organization}")
+
+                // 1. Pousser les données locales vers le serveur
+                syncOrchestrator.push(organization)
+                Log.d("ShoppingViewModel", "Push completed")
+
+                val pendingOps = _shoppingUiState.value.pendingOperations
+                if (pendingOps.isNotEmpty()) {
+                    showInfoMessage("Synchronisation terminée avec ${pendingOps.size} opérations en attente")
+                } else {
+                    showInfoMessage("Synchronisation complète réussie!")
+                }
+
+                Log.i("ShoppingViewModel", "✅ Manual sync completed successfully")
+
+            } catch (e: Exception) {
+                Log.e("ShoppingViewModel", "❌ Manual sync failed", e)
+                showErrorMessage("Erreur de synchronisation: ${e.localizedMessage}")
+            } finally {
+                _shoppingUiState.update { it.copy(isSyncing = false) }
+                Log.d("ShoppingViewModel", "Sync state reset to false")
+            }
+        }
+    }
 
 }
 

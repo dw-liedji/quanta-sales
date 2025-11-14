@@ -37,7 +37,7 @@ fun EmployeeAttendanceScreen(navigator: DestinationsNavigator, viewModel: Employ
             TiqtaqTopBar(scrollBehavior = scrollBehavior, destinationsNavigator = navigator,
                 onSearchQueryChanged = {},
                 onSearchClosed = {},
-                onRefresh = {
+                onSync = {
 
                 }
             )

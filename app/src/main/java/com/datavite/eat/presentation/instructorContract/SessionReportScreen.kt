@@ -76,7 +76,7 @@ fun SessionReportScreen(
                 destinationsNavigator = navigator,
                 onSearchQueryChanged = { },
                 onSearchClosed = { },
-                onRefresh = { },
+                onSync = { },
                 onBackPressed = {
                     navigator.navigate(InstructorContractScreenDestination())
                 }

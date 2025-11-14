@@ -90,21 +90,15 @@ fun SelectedStockCard(
                         .animateContentSize(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    QuantitySelector(
-                        quantity = selectedStock.quantity,
-                        onQuantityChange = {
-                            onQuantityChange(selectedStock.domainStock.id, it)
-                        }
-                    )
-
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        EditablePriceField(
-                            price = selectedStock.price.toString(),
+                        EditablePriceSelector(
+                            price = selectedStock.price.toInt(),
                             isLocked = selectedStock.isPriceLocked,
+
                             onPriceChange = {
-                                val value = it.toDoubleOrNull()
-                                if (value != null) onPriceChange(selectedStock.domainStock.id, value)
+                                intValue -> onPriceChange(selectedStock.domainStock.id, intValue.toDouble())
                             },
+
                             onLockToggle = { onLockToggle(selectedStock.domainStock.id) },
                         )
 
@@ -122,6 +116,19 @@ fun SelectedStockCard(
                         }
                     }
                 }
+            }
+
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                EditableQuantitySelector(
+                    quantity = selectedStock.quantity,
+                    onQuantityChange = {
+                        onQuantityChange(selectedStock.domainStock.id, it)
+                    }
+                )
             }
         }
     }

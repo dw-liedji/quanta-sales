@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
+import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.data.notification.NotificationOrchestrator
 import com.datavite.eat.data.notification.TextToSpeechNotifier
 import com.datavite.eat.data.remote.model.auth.AuthOrgUser
@@ -130,10 +131,11 @@ class TransactionViewModel @Inject constructor(
                     amount = amount,
                     transactionType = _transactionUiState.value.selectedType,
                     transactionBroker = _transactionUiState.value.selectedTransactionBroker,
-                    syncStatus = com.datavite.eat.data.local.model.SyncStatus.PENDING
+                    syncStatus = SyncStatus.PENDING
                 )
 
                 transactionRepository.createTransaction(newTransaction)
+
                 resetTransactionForm()
                 showInfoMessage("Transaction created successfully")
 

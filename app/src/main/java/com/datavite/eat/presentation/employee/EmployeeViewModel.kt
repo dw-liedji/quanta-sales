@@ -20,7 +20,7 @@ import com.datavite.eat.presentation.ai.MlkitFaceDetector
 import com.datavite.eat.presentation.ai.UserBitmap
 import com.datavite.eat.presentation.ai.model.FaceFrameRecognitionSecureResult
 import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
-import com.datavite.eat.data.mapper.network.NetworkStatusMonitor
+import com.datavite.eat.data.network.NetworkStatusMonitor
 import com.datavite.eat.domain.model.DomainEmployee
 import com.datavite.eat.domain.repository.EmployeeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -39,7 +39,7 @@ fun WorkingPeriodScreen(navigator: DestinationsNavigator, viewModel: WorkingPeri
             TiqtaqTopBar(scrollBehavior = scrollBehavior, destinationsNavigator = navigator,
                 onSearchQueryChanged = {},
                 onSearchClosed = {},
-                onRefresh = {}
+                onSync = {}
             )
         },
         bottomBar = {

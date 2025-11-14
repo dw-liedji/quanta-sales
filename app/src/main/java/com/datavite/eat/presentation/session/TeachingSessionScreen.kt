@@ -71,7 +71,7 @@ fun TeachingSessionScreen(
                     selectedOption.value = FilterOption.TODAY
                     viewModel.onSelectFilterOption(selectedOption.value)
                 },
-                onRefresh = {
+                onSync = {
                     val intent = Intent(
                         Intent.ACTION_VIEW,
                         "https://m.facebook.com/profile.php?id=61555380762150".toUri()

@@ -85,7 +85,7 @@ import com.datavite.eat.data.mapper.TeachingPeriodMapper
 import com.datavite.eat.data.mapper.TeachingSessionMapper
 import com.datavite.eat.data.mapper.TransactionMapper
 import com.datavite.eat.data.mapper.WorkingPeriodMapper
-import com.datavite.eat.data.mapper.network.NetworkStatusMonitor
+import com.datavite.eat.data.network.NetworkStatusMonitor
 import com.datavite.eat.data.notification.NotificationBusImpl
 import com.datavite.eat.data.notification.NotificationOrchestrator
 import com.datavite.eat.data.notification.NotificationService

@@ -1,6 +1,8 @@
 // ✅ ShoppingUiState.kt
 package com.datavite.eat.presentation.shopping
 
+import com.datavite.eat.data.local.model.PendingOperation
+import com.datavite.eat.domain.model.DomainBilling
 import com.datavite.eat.domain.model.DomainCustomer
 import com.datavite.eat.domain.model.DomainStock
 import com.datavite.eat.utils.TransactionBroker
@@ -13,6 +15,7 @@ data class ShoppingUiState(
     val selectedCategory: String? = null,
     val selectedStocks: List<SelectedDomainStock> = emptyList(),
     val selectedCustomer: DomainCustomer? = null,
+    val lastestBilling: DomainBilling? = null,
     val checkoutStep: CheckoutStep = CheckoutStep.REVIEW_ITEMS,
     val customerSearchQuery: String = "",
     val stockSearchQuery: String = "", // ✅ NEW FIELD
@@ -24,6 +27,8 @@ data class ShoppingUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val infoMessage: String? = null,
+    val pendingOperations: List<PendingOperation> = emptyList(),
+    val isSyncing: Boolean = false,
     val isConfirming: Boolean = false
 ) {
     val totalSelected: Int get() = selectedStocks.size

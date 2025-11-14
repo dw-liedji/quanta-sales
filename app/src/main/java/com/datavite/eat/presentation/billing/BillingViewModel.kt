@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
 import com.datavite.eat.data.local.model.SyncStatus
+import com.datavite.eat.data.network.NetworkStatusMonitor
 import com.datavite.eat.data.notification.NotificationOrchestrator
 import com.datavite.eat.data.notification.TextToSpeechNotifier
 import com.datavite.eat.data.remote.model.auth.AuthOrgUser
@@ -240,7 +241,43 @@ class BillingViewModel @Inject constructor(
     // Data Loading
     // -------------------------
     fun loadBillings(billings: List<DomainBilling>) {
-        _billingUiState.update { it.copy(availableBillings = billings, isLoading = false) }
+        _billingUiState.update { currentState ->
+            val filteredBillings = filterBillings(
+                billings = billings,
+                searchQuery = currentState.billingSearchQuery
+            )
+            currentState.copy(
+                availableBillings = billings,
+                filteredBillings = filteredBillings
+            )
+        }
+    }
+
+    private fun filterBillings(
+        billings: List<DomainBilling>,
+        searchQuery: String
+    ): List<DomainBilling> {
+        return if (searchQuery.isBlank()) {
+            billings
+        } else {
+            billings.filter { billing ->
+                billing.customerName.contains(searchQuery, ignoreCase = true) ||
+                        billing.customerPhoneNumber.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+
+    fun updateBillingSearchQuery(query: String) {
+        _billingUiState.update { currentState ->
+            val filteredBillings = filterBillings(
+                billings = currentState.availableBillings,
+                searchQuery = query
+            )
+            currentState.copy(
+                billingSearchQuery = query,
+                filteredBillings = filteredBillings
+            )
+        }
     }
 
     // -------------------------

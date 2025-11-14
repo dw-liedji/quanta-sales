@@ -45,7 +45,7 @@ fun TeachingCourseScreen(navigator: DestinationsNavigator, viewModel: TeachingCo
                 onSearchClosed = {
                     viewModel.onSearchQueryChanged("")
                 },
-                onRefresh = {
+                onSync = {
                     viewModel.onRefresh()
                 }
             )

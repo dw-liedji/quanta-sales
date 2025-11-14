@@ -67,7 +67,7 @@ fun CloudScreen(navigator: DestinationsNavigator) {
                 destinationsNavigator = navigator,
                 onSearchQueryChanged = { },
                 onSearchClosed = { },
-                onRefresh = { }
+                onSync = { }
             )
         },
         bottomBar = {

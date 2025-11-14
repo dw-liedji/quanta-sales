@@ -42,7 +42,9 @@ fun TiqtaqTopBar(
     destinationsNavigator: DestinationsNavigator,
     onSearchQueryChanged: (String) -> Unit,
     onSearchClosed: (String) -> Unit,
-    onRefresh: () -> Unit,
+    pendingCount:Int = 0,
+    isSyncing: Boolean = false,
+    onSync: () -> Unit,
 ) {
     var isSearchExpanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
@@ -99,16 +101,11 @@ fun TiqtaqTopBar(
                         )
                     }
 
-                    IconButton(
-                        onClick = onRefresh,
-                        modifier = Modifier.semantics { contentDescription = "Refresh content" }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    SyncStatusButton(
+                        pendingCount = pendingCount,
+                        isSyncing  ,
+                        onSyncClick = { onSync() }
+                    )
 
                     IconButton(
                         onClick = { destinationsNavigator.navigate(OrgSignOutScreenDestination) },

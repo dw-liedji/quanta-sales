@@ -1,4 +1,4 @@
-package com.datavite.eat.presentation.billing
+package com.datavite.eat.presentation.transaction
 
 import androidx.appcompat.app.ActionBar
 import androidx.compose.foundation.layout.size
@@ -13,13 +13,13 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
-import com.datavite.eat.domain.model.DomainBilling
+import com.datavite.eat.domain.model.DomainTransaction
 
 @Composable
-fun rememberBillPdfView(
-    billing: DomainBilling
+fun rememberTransactionPdfView(
+    domainTransaction: DomainTransaction
 ): ComposeView? {
-    var composeViewRef by remember(billing) { mutableStateOf<ComposeView?>(null) }
+    var composeViewRef by remember(domainTransaction) { mutableStateOf<ComposeView?>(null) }
 
     AndroidView(
         factory = { ctx ->
@@ -34,8 +34,7 @@ fun rememberBillPdfView(
             .zIndex(-1f) // Keep behind everything else
     ) { composeView ->
         composeView.setContent {
-            BillReceiptComposableWithHeader(billing = billing)
-            //BillReceiptComposableTest()
+            TransactionReceiptComposableWithHeader(transaction = domainTransaction)
         }
     }
 

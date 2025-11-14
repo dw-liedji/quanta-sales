@@ -56,7 +56,7 @@ fun TeachingSessionDetailScreen(
                 destinationsNavigator = navigator,
                 onSearchQueryChanged = {},
                 onSearchClosed = {},
-                onRefresh = { /* Add refresh logic if needed */ },
+                onSync = { /* Add refresh logic if needed */ },
                 onBackPressed = {
                     navigator.navigate(TeachingSessionScreenDestination())
                 }

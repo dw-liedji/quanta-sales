@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.datavite.eat.data.remote.model.auth.AuthOrgUser
 import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
-import com.datavite.eat.data.mapper.network.NetworkStatusMonitor
+import com.datavite.eat.data.network.NetworkStatusMonitor
 import com.datavite.eat.domain.repository.WorkingPeriodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
-import com.datavite.eat.data.mapper.network.NetworkStatusMonitor
+import com.datavite.eat.data.network.NetworkStatusMonitor
 import com.datavite.eat.data.sync.PushSyncWorker
 import com.datavite.eat.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext

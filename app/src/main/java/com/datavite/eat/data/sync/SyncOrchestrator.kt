@@ -16,7 +16,7 @@ class SyncOrchestrator @Inject constructor(
     // <-- Array with "out" (instead of list) for polymorphism and collection injection support
     private val syncServices: Array<out SyncService>,
 ) {
-    private val maxRetries = 3
+    private val maxRetries = 10000
 
     private val lock = Mutex()
 

@@ -1,7 +1,9 @@
 package com.datavite.eat.presentation.transaction
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
@@ -74,11 +77,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.datavite.eat.app.BottomNavigationBar
 import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.domain.model.DomainTransaction
+import com.datavite.eat.presentation.billing.rememberBillPdfView
 import com.datavite.eat.presentation.components.TiqtaqTopBar
+import com.datavite.eat.utils.BillPDFExporter
 import com.datavite.eat.utils.TransactionBroker
 import com.datavite.eat.utils.TransactionType
 import com.ramcosta.composedestinations.annotation.Destination
@@ -132,7 +138,7 @@ fun TransactionScreen(
                 destinationsNavigator = navigator,
                 onSearchQueryChanged = {  },
                 onSearchClosed = {  },
-                onRefresh = { viewModel.onRefresh() }
+                onSync = { viewModel.onRefresh() }
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -185,6 +191,9 @@ fun TransactionScreen(
 
         // Transaction Details Bottom Sheet
         transactionUiState.selectedTransaction?.let { selectedTransaction ->
+
+            val billingPdfView = rememberTransactionPdfView(selectedTransaction)
+
             ModalBottomSheet(
                 sheetState = bottomSheetState,
                 onDismissRequest = { viewModel.unselectTransaction() }
@@ -194,6 +203,12 @@ fun TransactionScreen(
                     onDelete = {
                         viewModel.deleteTransaction(selectedTransaction)
                         viewModel.unselectTransaction()
+                    },
+                    onPrintTransaction = {
+                        billingPdfView?.let {
+                            BillPDFExporter.exportBillToPDF(context, it, selectedTransaction.id.substring(0,5))
+                        } ?: Toast.makeText(context, "Transaction view not ready", Toast.LENGTH_SHORT).show()
+
                     },
                     onClose = { viewModel.unselectTransaction() }
                 )
@@ -215,7 +230,6 @@ fun TransactionScreen(
         }
     }
 }
-
 @Composable
 fun TransactionCard(
     transaction: DomainTransaction,
@@ -223,6 +237,7 @@ fun TransactionCard(
     modifier: Modifier = Modifier
 ) {
     val isDeposit = transaction.transactionType == TransactionType.DEPOSIT
+    val isSynced = transaction.syncStatus == SyncStatus.SYNCED
 
     // Material Design 3 color system
     val amountColor = if (isDeposit) {
@@ -231,11 +246,22 @@ fun TransactionCard(
         MaterialTheme.colorScheme.error
     }
 
-    val containerColor = if (isDeposit) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.errorContainer
+    // Background color based on sync status
+    val containerColor = when (transaction.syncStatus) {
+        SyncStatus.SYNCED -> MaterialTheme.colorScheme.surface
+        SyncStatus.PENDING -> MaterialTheme.colorScheme.surfaceContainerLow
+        SyncStatus.FAILED -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
+        else -> MaterialTheme.colorScheme.surface
     }
+
+    // Border color for non-synced transactions
+    val borderColor = when (transaction.syncStatus) {
+        SyncStatus.PENDING -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+        SyncStatus.FAILED -> MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+        else -> Color.Transparent
+    }
+
+    val borderWidth = if (transaction.syncStatus != SyncStatus.SYNCED) 1.dp else 0.dp
 
     val icon = if (isDeposit) Icons.Outlined.ArrowDownward else Icons.Outlined.ArrowUpward
 
@@ -253,6 +279,7 @@ fun TransactionCard(
                 onClick = onClick,
                 role = Role.Button
             )
+            .border(borderWidth, borderColor, MaterialTheme.shapes.medium)
             .semantics {
                 // Screen reader support
                 contentDescription = buildString {
@@ -260,14 +287,15 @@ fun TransactionCard(
                     append("Amount: ${transaction.amount} FCFA. ")
                     append("Type: ${if (isDeposit) "deposit" else "withdrawal"}. ")
                     append("Participant: ${transaction.participant}. ")
+                    append("Sync status: ${transaction.syncStatus}. ")
                     append("Date: ${transaction.created.substring(0, 10)}")
                 }
             },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = containerColor,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
-        elevation = CardDefaults.cardElevation(1.dp),
+        elevation = if (isSynced) CardDefaults.cardElevation(1.dp) else CardDefaults.cardElevation(0.dp),
         shape = MaterialTheme.shapes.medium
     ) {
         Row(
@@ -281,7 +309,13 @@ fun TransactionCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(MaterialTheme.shapes.small)
-                    .background(containerColor),
+                    .background(
+                        if (isDeposit) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
+                        }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -301,19 +335,34 @@ fun TransactionCard(
                     .padding(end = 8.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                // Reason with proper overflow handling
-                Text(
-                    text = transaction.reason,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.semantics {
-                        // Make reason focusable for screen readers
-                        heading()
+                // First row: Reason and Sync Status Tag
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Reason with proper overflow handling
+                    Text(
+                        text = transaction.reason,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp)
+                            .semantics {
+                                // Make reason focusable for screen readers
+                                heading()
+                            }
+                    )
+
+                    // Sync Status Tag
+                    if (!isSynced) {
+                        SyncStatusTag(transaction.syncStatus)
                     }
-                )
+                }
 
                 Spacer(modifier = Modifier.height(4.dp))
 
@@ -391,11 +440,10 @@ fun TransactionCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .widthIn(min = 80.dp) // Prevent text compression
-
                 )
 
-                // Status indicator for sync state
-                if (transaction.syncStatus != SyncStatus.SYNCED) {
+                // Small sync indicator dot (alternative to tag)
+                if (!isSynced) {
                     Spacer(modifier = Modifier.height(2.dp))
                     Box(
                         modifier = Modifier
@@ -415,156 +463,43 @@ fun TransactionCard(
     }
 }
 
-// Alternative version with expanded layout for better long text handling
 @Composable
-fun ExpandedTransactionCard(
-    transaction: DomainTransaction,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val isDeposit = transaction.transactionType == TransactionType.DEPOSIT
-    val amountColor = if (isDeposit) MaterialTheme.colorScheme.primary
-    else MaterialTheme.colorScheme.error
-
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                onClick = onClick,
-                role = Role.Button
-            ),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(1.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header row with amount and type
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Type indicator
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (isDeposit) Icons.Outlined.ArrowDownward
-                        else Icons.Outlined.ArrowUpward,
-                        contentDescription = if (isDeposit) "Income" else "Expense",
-                        tint = amountColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (isDeposit) "Deposit" else "Withdrawal",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = amountColor,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                // Amount
-                Text(
-                    text = "${transaction.amount.toInt()} FCFA",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = amountColor
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Reason with more space
-            Text(
-                text = transaction.reason,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                maxLines = 2, // Allow 2 lines for longer reasons
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.1
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Metadata row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    // Participant
-                    Text(
-                        text = transaction.participant,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    // Broker and date
-                    Text(
-                        text = "${transaction.transactionBroker.name.replace("_", " ")} • ${transaction.created.substring(0, 10)}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
-
-                // Sync status indicator
-                if (transaction.syncStatus != SyncStatus.SYNCED) {
-                    val statusColor = when (transaction.syncStatus) {
-                        SyncStatus.PENDING -> MaterialTheme.colorScheme.tertiary
-                        SyncStatus.FAILED -> MaterialTheme.colorScheme.error
-                        else -> Color.Transparent
-                    }
-                    val statusText = when (transaction.syncStatus) {
-                        SyncStatus.PENDING -> "Pending"
-                        SyncStatus.FAILED -> "Failed"
-                        else -> ""
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(statusColor)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = statusText,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = statusColor
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Usage in your LazyColumn with adaptive cards based on content
-@Composable
-fun TransactionCardAdaptive(
-    transaction: DomainTransaction,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // Use expanded layout for transactions with long text
-    val useExpandedLayout = transaction.reason.length > 40 ||
-            transaction.participant.length > 25
-
-    if (useExpandedLayout) {
-        ExpandedTransactionCard(
-            transaction = transaction,
-            onClick = onClick,
-            modifier = modifier
+private fun SyncStatusTag(syncStatus: SyncStatus) {
+    val (text, color, backgroundColor) = when (syncStatus) {
+        SyncStatus.PENDING -> Triple(
+            "En attente",
+            MaterialTheme.colorScheme.onTertiaryContainer,
+            MaterialTheme.colorScheme.tertiaryContainer
         )
-    } else {
-        TransactionCard(
-            transaction = transaction,
-            onClick = onClick,
-            modifier = modifier
+        SyncStatus.FAILED -> Triple(
+            "Échec",
+            MaterialTheme.colorScheme.onErrorContainer,
+            MaterialTheme.colorScheme.errorContainer
+        )
+        SyncStatus.SYNCED -> Triple(
+            "Synchronisé",
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            MaterialTheme.colorScheme.primaryContainer
+        )
+        SyncStatus.SYNCING ->  Triple(
+            "Synchronizing",
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            MaterialTheme.colorScheme.primaryContainer
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(backgroundColor)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1
         )
     }
 }
@@ -572,6 +507,7 @@ fun TransactionCardAdaptive(
 fun TransactionDetailModal(
     transaction: DomainTransaction,
     onDelete: () -> Unit,
+    onPrintTransaction: () -> Unit,
     onClose: () -> Unit
 ) {
     val isDeposit = transaction.transactionType == TransactionType.DEPOSIT
@@ -633,30 +569,43 @@ fun TransactionDetailModal(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Actions
+        // Action Buttons - Just Smaller
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp) // Reduced spacing
         ) {
             OutlinedButton(
                 onClick = onDelete,
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.error
-                )
+                ),
+                contentPadding = PaddingValues(vertical = 4.dp) // Tighter padding
             ) {
-                Icon(Icons.Default.Delete, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Delete")
+                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(2.dp))
+                Text("Delete", fontSize = 11.sp) // Smaller text
+            }
+
+            OutlinedButton(
+                onClick = onPrintTransaction,
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(vertical = 4.dp)
+            ) {
+                Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(2.dp))
+                Text("Print", fontSize = 11.sp)
             }
 
             Button(
                 onClick = onClose,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(vertical = 4.dp)
             ) {
-                Text("Close")
+                Text("Close", fontSize = 11.sp)
             }
         }
+
     }
 }
 

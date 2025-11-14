@@ -1,4 +1,4 @@
-package com.datavite.eat.data.mapper.network
+package com.datavite.eat.data.network
 
 import android.content.Context
 import android.net.ConnectivityManager

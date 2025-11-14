@@ -49,7 +49,8 @@ fun TiqtaqCloudTopBar(
     destinationsNavigator: DestinationsNavigator,
     onSearchQueryChanged: (String) -> Unit,
     onSearchClosed: (String) -> Unit,
-    onRefresh: () -> Unit,
+    isSyncing: Boolean = false,
+    onSync: () -> Unit,
     onBackPressed: () -> Unit,
 ) {
     var isSearchExpanded by remember { mutableStateOf(false) }
@@ -151,13 +152,11 @@ fun TiqtaqCloudTopBar(
                     )
                 }
 
-                IconButton(onClick = onRefresh) {
-                    Icon(
-                        imageVector = Icons.Filled.FavoriteBorder,
-                        contentDescription = "Favorite",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                SyncStatusButton(
+                    pendingCount = 5,
+                    isSyncing = isSyncing,
+                    onSyncClick = { onSync }
+                )
 
                 IconButton(onClick = { destinationsNavigator.navigate(OrgSignOutScreenDestination) }) {
                     Icon(

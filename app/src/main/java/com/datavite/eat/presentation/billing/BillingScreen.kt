@@ -94,9 +94,13 @@ fun BillingScreen(
             TiqtaqTopBar(
                 scrollBehavior = scrollBehavior,
                 destinationsNavigator = navigator,
-                onSearchQueryChanged = {},
-                onSearchClosed = {},
-                onRefresh = {
+                onSearchQueryChanged = { query ->
+                    viewModel.updateBillingSearchQuery(query) // ✅ Connect search
+                },
+                onSearchClosed = {
+                    viewModel.updateBillingSearchQuery("") // Reset filter
+                },
+                onSync = {
                     val intent = Intent(
                         Intent.ACTION_VIEW,
                         "https://m.facebook.com/profile.php?id=61555380762150".toUri()
@@ -115,11 +119,11 @@ fun BillingScreen(
         ) {
             if (billingUiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (billingUiState.availableBillings.isEmpty()) {
+            } else if (billingUiState.filteredBillings.isEmpty()) {
                 EmptyBillingState()
             } else {
                 BillingList(
-                    billings = billingUiState.availableBillings,
+                    billings = billingUiState.filteredBillings,
                     onBillingClick = { billing ->
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         viewModel.selectBilling(billing)

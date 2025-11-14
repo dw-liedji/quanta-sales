@@ -56,12 +56,6 @@ enum class BottomNavigationBarItem(
         unselectedIcon = Icons.Outlined.AttachMoney,
         hasNews = true
     ),
-    Students(direction = StudentScreenDestination,
-        title = "Students",
-        selectedIcon = Icons.Filled.ElectricBike,
-        unselectedIcon = Icons.Outlined.ElectricBike,
-        hasNews = true
-    ),
     Cloud(direction = CloudScreenDestination,
         title = "Cloud",
         selectedIcon = Icons.Filled.Cloud,

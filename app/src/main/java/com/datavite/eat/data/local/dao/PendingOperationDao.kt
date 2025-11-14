@@ -14,14 +14,14 @@ interface PendingOperationDao {
     suspend fun insert(operation: PendingOperation)
 
     @Query("SELECT * FROM pending_operations ORDER BY createdAt ASC LIMIT :limit")
-    suspend fun getNextOperations(limit: Int = 20): List<PendingOperation>
+    suspend fun getNextOperations(limit: Int = 50): List<PendingOperation>
 
     @Query("""
         SELECT * FROM pending_operations 
         WHERE failedAttempts < :maxRetries 
         ORDER BY createdAt ASC LIMIT :limit
     """)
-    suspend fun getNextOperationsEligibleForRetry(limit: Int = 20, maxRetries: Int = 5): List<PendingOperation>
+    suspend fun getNextOperationsEligibleForRetry(limit: Int = 50, maxRetries: Int = 5): List<PendingOperation>
 
     @Query("DELETE FROM pending_operations WHERE id = :id")
     suspend fun deleteById(id: Long)
@@ -31,4 +31,8 @@ interface PendingOperationDao {
 
     @Query("SELECT COUNT(*) FROM pending_operations")
     fun getPendingCountFlow(): Flow<Int>
+
+    @Query("SELECT * FROM pending_operations ORDER BY createdAt ASC")
+    fun getAllPendingOperationsFlow(): Flow<List<PendingOperation>>
+
 }

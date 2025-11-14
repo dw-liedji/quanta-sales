@@ -1,6 +1,7 @@
 package com.datavite.eat.presentation.shopping
 
-import android.content.Intent
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,12 +40,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.datavite.eat.app.BottomNavigationBar
+import com.datavite.eat.presentation.billing.rememberBillPdfView
 import com.datavite.eat.presentation.components.NotificationHost
 import com.datavite.eat.presentation.components.PullToRefreshBox
 import com.datavite.eat.presentation.components.TiqtaqTopBar
+import com.datavite.eat.utils.BillPDFExporter
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.ShoppingScreenDestination
@@ -68,6 +70,16 @@ fun ShoppingScreen(
     val notificationState by viewModel.notificationState
 
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+
+    // AJOUTER: Logs pour déboguer l'état de sync
+    LaunchedEffect(shoppingUiState.isSyncing) {
+        Log.d("ShoppingScreen", "Sync state changed: ${shoppingUiState.isSyncing}")
+    }
+
+    LaunchedEffect(shoppingUiState.pendingOperations.size) {
+        Log.d("ShoppingScreen", "Pending operations: ${shoppingUiState.pendingOperations.size}")
+    }
+
 
     // Show bottom sheet based on checkout step
     LaunchedEffect(shoppingUiState.checkoutStep) {
@@ -117,12 +129,10 @@ fun ShoppingScreen(
                 onSearchClosed = {
                     viewModel.updateStockSearchQuery("") // Reset filter
                 },
-                onRefresh = {
-                    val intent = Intent(
-                        Intent.ACTION_VIEW,
-                        "https://m.facebook.com/profile.php?id=61555380762150".toUri()
-                    ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-                    context.startActivity(intent)
+                pendingCount = shoppingUiState.pendingOperations.size,
+                isSyncing = shoppingUiState.isSyncing,
+                onSync = {
+                    viewModel.manualSync()
                 }
             )
         },
@@ -136,6 +146,13 @@ fun ShoppingScreen(
             modifier = Modifier.fillMaxSize().padding(paddings)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
+
+                shoppingUiState.lastestBilling?.let { billing ->
+                    val billingPdfView = rememberBillPdfView(billing)
+                    billingPdfView?.let {
+                        BillPDFExporter.exportBillToPDF(context, it, billing.billNumber )
+                    } ?: Toast.makeText(context, "Bill view not ready", Toast.LENGTH_SHORT).show()
+                }
 
                 when (shoppingUiState.checkoutStep) {
                     CheckoutStep.REVIEW_ITEMS -> {
@@ -282,7 +299,7 @@ fun ShoppingMainContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total: ${shoppingUiState.totalAmount} FCFA",
+                    text = "Total: ${"%,.0f".format(shoppingUiState.totalAmount)} FCFA",
                     style = MaterialTheme.typography.titleMedium
                 )
 

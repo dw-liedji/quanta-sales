@@ -55,7 +55,7 @@ fun WebScreen(navigator: DestinationsNavigator) {
                 destinationsNavigator = navigator,
                 onSearchQueryChanged = { },
                 onSearchClosed = { },
-                onRefresh = { }
+                onSync = { }
             )
         },
         bottomBar = {

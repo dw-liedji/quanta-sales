@@ -68,7 +68,7 @@ fun StudentScreen(
                     onSearchClosed = {
                         viewModel.onSearchQueryChanged("")
                     },
-                    onRefresh = {
+                    onSync = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://m.facebook.com/profile.php?id=61555380762150")).apply {
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         }

@@ -17,7 +17,7 @@ import com.datavite.eat.presentation.ai.UserBitmap
 import com.datavite.eat.presentation.ai.model.FaceFrame
 import com.datavite.eat.presentation.ai.model.FaceFrameRecognitionSecureResult
 import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
-import com.datavite.eat.data.mapper.network.NetworkStatusMonitor
+import com.datavite.eat.data.network.NetworkStatusMonitor
 import com.datavite.eat.domain.model.DomainStudent
 import com.datavite.eat.domain.repository.StudentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
