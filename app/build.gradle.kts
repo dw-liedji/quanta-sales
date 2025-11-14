@@ -30,7 +30,7 @@ android {
         val production = "\"https://transavite-0121b123ce88.herokuapp.com/\""
         val development = "\"http://192.168.43.107:8001/\""
 
-        val currentEnv = development
+        val currentEnv = production
 
         getByName("debug") {
             buildConfigField(

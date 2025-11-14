@@ -291,7 +291,7 @@ fun CustomerListItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    customer.phoneNumber,
+                    customer.phoneNumber!!,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -389,20 +389,10 @@ fun CreateCustomerForm(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 supportingText = {
                     when {
-                        customerPhone.isBlank() -> Text("Requis", color = MaterialTheme.colorScheme.error)
                         !customerPhone.isValidPhone() -> Text("Format invalide", color = MaterialTheme.colorScheme.error)
                     }
                 },
-                isError = customerPhone.isBlank() || !customerPhone.isValidPhone(),
-                trailingIcon = {
-                    if (customerPhone.isNotBlank() && !customerPhone.isValidPhone()) {
-                        Icon(
-                            Icons.Default.Warning,
-                            "Format de téléphone invalide",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
+
             )
 
             Row(
@@ -458,7 +448,7 @@ fun SelectedCustomerCard(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        customer.phoneNumber,
+                        customer.phoneNumber!!,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
@@ -678,5 +668,5 @@ fun OrderSummaryFooter(
 
 // Extension for phone validation
 private fun String.isValidPhone(): Boolean {
-    return this.isNotBlank() && this.length >= 8 && this.all { it.isDigit() || it == '+' }
+    return true
 }

@@ -449,7 +449,7 @@ class ShoppingViewModel @Inject constructor(
                             authOrgUser = authOrgUser,
                             customerId = customerId,
                             customerName = customerName,
-                            customerPhoneNumber = customerPhoneNumber,
+                            customerPhoneNumber = customerPhoneNumber!!,
                             billNumber = "BILL-${System.currentTimeMillis()}",
                             initialPayment = initialPayment,
                             paymentBroker = paymentBroker
@@ -543,7 +543,7 @@ class ShoppingViewModel @Inject constructor(
         } else {
             customers.filter { customer ->
                 customer.name.contains(searchQuery, ignoreCase = true) ||
-                        customer.phoneNumber.contains(searchQuery, ignoreCase = true)
+                        customer.phoneNumber!!.contains(searchQuery, ignoreCase = true)
             }
         }
     }

@@ -17,6 +17,6 @@ data class RemoteCustomer(
     @SerialName("name")
     val name: String,
     @SerialName("phone_number")
-    val phoneNumber: String,
+    val phoneNumber: String?,
 )
 

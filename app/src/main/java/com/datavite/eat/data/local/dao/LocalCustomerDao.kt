@@ -35,7 +35,7 @@ interface LocalCustomerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveLocalCustomer(localCustomer: LocalCustomer)
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLocalCustomer(localCustomer: LocalCustomer)
 
 

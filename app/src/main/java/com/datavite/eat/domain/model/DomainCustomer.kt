@@ -9,6 +9,6 @@ data class DomainCustomer(
     val orgSlug: String,
     val orgId: String,
     val name: String,
-    val phoneNumber: String,
+    val phoneNumber: String?,
     val syncStatus: SyncStatus,
     )

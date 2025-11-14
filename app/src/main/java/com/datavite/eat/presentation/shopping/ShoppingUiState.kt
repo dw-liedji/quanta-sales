@@ -36,7 +36,8 @@ data class ShoppingUiState(
     val isSelectAll: Boolean get() = selectedStocks.isNotEmpty() && selectedStocks.size == availableStocks.size
     val categoryList: List<String> get() = availableStocks.map { it.categoryName }.distinct()
 
-    val isNewCustomerFormValid: Boolean get() = customerName.isNotBlank() && customerPhone.isValidPhone()
+    //val isNewCustomerFormValid: Boolean get() = customerName.isNotBlank() && customerPhone.isValidPhone()
+    val isNewCustomerFormValid: Boolean get() = customerName.isNotBlank()
     val shouldShowCustomerForm: Boolean get() = checkoutStep == CheckoutStep.CUSTOMER_INFO
     val isInCreateCustomerMode: Boolean get() = isCreatingNewCustomer && checkoutStep == CheckoutStep.CUSTOMER_INFO
     val isPaymentValid: Boolean
