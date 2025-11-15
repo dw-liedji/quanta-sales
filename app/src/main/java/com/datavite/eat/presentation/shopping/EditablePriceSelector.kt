@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.datavite.eat.data.remote.model.auth.AuthOrgUser
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -52,6 +53,7 @@ import kotlinx.coroutines.launch
 fun EditablePriceSelector(
     price: Int,
     isLocked: Boolean,
+    authOrgUser: AuthOrgUser?,
     onPriceChange: (Int) -> Unit,
     onLockToggle: () -> Unit,
     modifier: Modifier = Modifier
@@ -114,30 +116,31 @@ fun EditablePriceSelector(
             }
 
             // Lock / Unlock
-            IconButton(
-                onClick = onLockToggle,
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(
-                        color = if (isLocked)
-                            MaterialTheme.colorScheme.surfaceVariant
+            if (authOrgUser!!.canEditPrice)
+                IconButton(
+                    onClick = onLockToggle,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(
+                            color = if (isLocked)
+                                MaterialTheme.colorScheme.surfaceVariant
+                            else
+                                MaterialTheme.colorScheme.primaryContainer,
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = if (isLocked)
+                            Icons.Filled.Lock
                         else
-                            MaterialTheme.colorScheme.primaryContainer,
-                        shape = CircleShape
+                            Icons.Filled.LockOpen,
+                        contentDescription = null,
+                        tint = if (isLocked)
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        else
+                            MaterialTheme.colorScheme.primary
                     )
-            ) {
-                Icon(
-                    imageVector = if (isLocked)
-                        Icons.Filled.Lock
-                    else
-                        Icons.Filled.LockOpen,
-                    contentDescription = null,
-                    tint = if (isLocked)
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    else
-                        MaterialTheme.colorScheme.primary
-                )
-            }
+                }
         }
     }
 }

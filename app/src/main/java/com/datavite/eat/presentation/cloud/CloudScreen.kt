@@ -78,7 +78,7 @@ fun CloudScreen(navigator: DestinationsNavigator) {
         LaunchedEffect(webNavigator) {
             val bundle = webViewState.viewState
             if (bundle == null) {
-                webNavigator.loadUrl("https://www.cameinet.com/fr/users/account/")
+                webNavigator.loadUrl("https://transavite-0121b123ce88.herokuapp.com/en/")
             }
         }
 

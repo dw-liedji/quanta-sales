@@ -52,7 +52,7 @@ class TransactionViewModel @Inject constructor(
                 authOrgUser?.let {
                     Log.i("TransactionViewModel", "Organization changed: ${it.orgSlug}")
                     _authOrgUser.value = it
-                    syncLocalDataWithServer(it.orgSlug)
+                    //syncLocalDataWithServer(it.orgSlug)
                 }
             }
     }

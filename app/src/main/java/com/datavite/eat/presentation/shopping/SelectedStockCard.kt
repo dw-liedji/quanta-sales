@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.datavite.eat.data.remote.model.auth.AuthOrgUser
 
 // ================================
 // SELECTED STOCK CARD
@@ -37,6 +38,7 @@ import coil.request.ImageRequest
 @Composable
 fun SelectedStockCard(
     selectedStock: SelectedDomainStock,
+    authOrgUser: AuthOrgUser?,
     onQuantityChange: (stockId: String, newQuantity: Int) -> Unit,
     onPriceChange: (stockId: String, newPrice: Double) -> Unit,
     onLockToggle: (stockId: String) -> Unit,
@@ -94,7 +96,7 @@ fun SelectedStockCard(
                         EditablePriceSelector(
                             price = selectedStock.price.toInt(),
                             isLocked = selectedStock.isPriceLocked,
-
+                            authOrgUser=authOrgUser,
                             onPriceChange = {
                                 intValue -> onPriceChange(selectedStock.domainStock.id, intValue.toDouble())
                             },

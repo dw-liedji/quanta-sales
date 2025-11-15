@@ -21,6 +21,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 @Composable
 fun OrgSignOutScreen(navigator: DestinationsNavigator, viewModel: OrgSignOutViewModel = hiltViewModel()) {
     val isLoggedOut by viewModel.isLoggedOut.collectAsState()
+    val totalPendingOperation by viewModel.totalPendingOperation.collectAsState()
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -32,14 +33,19 @@ fun OrgSignOutScreen(navigator: DestinationsNavigator, viewModel: OrgSignOutView
             }
         }else {
             Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Are you sure to Sign out ?")
-                Button(onClick = {
-                    viewModel.signOut()
-                }) {
-                    Text(text = "Sign out")
+                if (totalPendingOperation != 0 ) {
+                    Text(text = "You still have $totalPendingOperation pending operations. You must sync before signing out. Please, make sure you synced before trying again.")
+                }
+                else {
+
+                    Text(text = "Are you sure to Sign out ?")
+                    Button(onClick = {
+                        viewModel.signOut()
+                    }) {
+                        Text(text = "Sign out")
+                    }
                 }
             }
-
 
         }
 

@@ -42,10 +42,11 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.datavite.eat.app.BottomNavigationBar
+import com.datavite.eat.data.remote.model.auth.AuthOrgUser
 import com.datavite.eat.presentation.billing.rememberBillPdfView
 import com.datavite.eat.presentation.components.NotificationHost
 import com.datavite.eat.presentation.components.PullToRefreshBox
-import com.datavite.eat.presentation.components.TiqtaqTopBar
+import com.datavite.eat.presentation.components.QuantaTopBar
 import com.datavite.eat.utils.BillPDFExporter
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
@@ -68,6 +69,7 @@ fun ShoppingScreen(
 
     val shoppingUiState by viewModel.shoppingUiState.collectAsState()
     val notificationState by viewModel.notificationState
+    val authOrgUser by viewModel.authOrgUser.collectAsState()
 
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
@@ -120,7 +122,7 @@ fun ShoppingScreen(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TiqtaqTopBar(
+            QuantaTopBar(
                 scrollBehavior = scrollBehavior,
                 destinationsNavigator = navigator,
                 onSearchQueryChanged = { query ->
@@ -158,6 +160,7 @@ fun ShoppingScreen(
                     CheckoutStep.REVIEW_ITEMS -> {
                         ShoppingMainContent(
                             shoppingUiState = shoppingUiState,
+                            authOrgUser=authOrgUser,
                             viewModel = viewModel,
                             haptic = haptic,
                             scope = scope,
@@ -213,6 +216,7 @@ fun ShoppingScreen(
             ) {
                 OrderVerificationBottomSheet(
                     selectedStocks = shoppingUiState.selectedStocks,
+                    authOrgUser=authOrgUser,
                     totalAmount = shoppingUiState.totalAmount,
                     onQuantityChange = viewModel::updateQuantity,
                     onPriceChange = viewModel::updatePrice,
@@ -229,6 +233,7 @@ fun ShoppingScreen(
 @Composable
 fun ShoppingMainContent(
     shoppingUiState: ShoppingUiState,
+    authOrgUser: AuthOrgUser?,
     viewModel: ShoppingViewModel,
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     scope: CoroutineScope,
@@ -278,6 +283,7 @@ fun ShoppingMainContent(
                 SelectableDomainStockCard(
                     domainStock = domainStock,
                     selectedStock = selectedStock,
+                    authOrgUser = authOrgUser,
                     onToggle = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         viewModel.toggleStockSelection(domainStock)

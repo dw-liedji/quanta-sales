@@ -120,7 +120,7 @@ class ShoppingViewModel @Inject constructor(
             } finally {
                 _shoppingUiState.update { it.copy(isLoading = false) }
             }
-        }
+        };
     }
 
     fun onRefresh() {

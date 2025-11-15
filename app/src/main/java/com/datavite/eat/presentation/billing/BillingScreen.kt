@@ -28,6 +28,7 @@ import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.datavite.eat.domain.model.DomainBilling
 import com.datavite.eat.app.BottomNavigationBar
+import com.datavite.eat.data.remote.model.auth.AuthOrgUser
 import com.datavite.eat.domain.model.DomainBillingPayment
 import com.datavite.eat.presentation.components.TiqtaqTopBar
 import com.datavite.eat.utils.BillPDFExporter
@@ -48,6 +49,7 @@ fun BillingScreen(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
+    val authOrgUser by viewModel.authOrgUser.collectAsState()
     val billingUiState by viewModel.billingUiState.collectAsState()
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val paymentSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
@@ -142,6 +144,7 @@ fun BillingScreen(
             ) {
                 BillingDetailModal(
                     billing = selectedBilling,
+                    authOrgUser = authOrgUser,
                     onPrintBill = {
                         billingPdfView?.let {
                             BillPDFExporter.exportBillToPDF(context, it, selectedBilling.billNumber)
@@ -230,6 +233,7 @@ fun BillingList(
 @Composable
 fun BillingDetailModal(
     billing: DomainBilling,
+    authOrgUser: AuthOrgUser?,
     onPrintBill: () -> Unit,
     onAddPayment: () -> Unit,
     onDeletePayment: (DomainBillingPayment) -> Unit,
@@ -375,6 +379,7 @@ fun BillingDetailModal(
                 items(billing.payments) { payment ->
                     PaymentItem(
                         domainBillingPayment = payment,
+                        authOrgUser = authOrgUser,
                         onDelete = { onDeletePayment(payment) }
                     )
                 }
@@ -388,7 +393,8 @@ fun BillingDetailModal(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp) // Reduced spacing
         ) {
-            OutlinedButton(
+
+            if (authOrgUser!!.isManager || authOrgUser.isAdmin) OutlinedButton(
                 onClick = onDeleteBill,
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.outlinedButtonColors(
@@ -425,6 +431,7 @@ fun BillingDetailModal(
 @Composable
 fun PaymentItem(
     domainBillingPayment: DomainBillingPayment,
+    authOrgUser: AuthOrgUser?,
     onDelete: () -> Unit
 ) {
     Card(
@@ -450,6 +457,8 @@ fun PaymentItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            if (authOrgUser!!.isManager || authOrgUser.isAdmin)
             IconButton(
                 onClick = onDelete,
                 modifier = Modifier.size(36.dp)

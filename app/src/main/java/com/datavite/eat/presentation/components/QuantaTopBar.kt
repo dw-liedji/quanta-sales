@@ -2,7 +2,6 @@ package com.datavite.eat.presentation.components
 
 import TiqTaqBlinking
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -37,7 +36,7 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TiqtaqTopBar(
+fun QuantaTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     destinationsNavigator: DestinationsNavigator,
     onSearchQueryChanged: (String) -> Unit,
@@ -96,6 +95,23 @@ fun TiqtaqTopBar(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    SyncStatusButton(
+                        pendingCount = pendingCount,
+                        isSyncing  ,
+                        onSyncClick = { onSync() }
+                    )
+
+                    IconButton(
+                        onClick = { destinationsNavigator.navigate(OrgSignOutScreenDestination) },
+                        modifier = Modifier.semantics { contentDescription = "Sign out" }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurface
                         )

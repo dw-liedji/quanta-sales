@@ -81,6 +81,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.datavite.eat.app.BottomNavigationBar
 import com.datavite.eat.data.local.model.SyncStatus
+import com.datavite.eat.data.remote.model.auth.AuthOrgUser
 import com.datavite.eat.domain.model.DomainTransaction
 import com.datavite.eat.presentation.billing.rememberBillPdfView
 import com.datavite.eat.presentation.components.TiqtaqTopBar
@@ -103,6 +104,7 @@ fun TransactionScreen(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val transactionUiState by viewModel.transactionUiState.collectAsState()
+    val authOrgUser by viewModel.authOrgUser.collectAsState()
 
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val snackbarHostState = remember { SnackbarHostState() }
@@ -200,6 +202,7 @@ fun TransactionScreen(
             ) {
                 TransactionDetailModal(
                     transaction = selectedTransaction,
+                    authOrgUser = authOrgUser,
                     onDelete = {
                         viewModel.deleteTransaction(selectedTransaction)
                         viewModel.unselectTransaction()
@@ -506,6 +509,7 @@ private fun SyncStatusTag(syncStatus: SyncStatus) {
 @Composable
 fun TransactionDetailModal(
     transaction: DomainTransaction,
+    authOrgUser: AuthOrgUser?,
     onDelete: () -> Unit,
     onPrintTransaction: () -> Unit,
     onClose: () -> Unit
@@ -574,19 +578,7 @@ fun TransactionDetailModal(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp) // Reduced spacing
         ) {
-            OutlinedButton(
-                onClick = onDelete,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                ),
-                contentPadding = PaddingValues(vertical = 4.dp) // Tighter padding
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(14.dp))
-                Spacer(modifier = Modifier.width(2.dp))
-                Text("Delete", fontSize = 11.sp) // Smaller text
-            }
-
+            if (authOrgUser!!.isAdmin || authOrgUser.isManager)
             OutlinedButton(
                 onClick = onPrintTransaction,
                 modifier = Modifier.weight(1f),

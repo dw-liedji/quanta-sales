@@ -14,6 +14,7 @@ data class AuthOrgUser(
     @SerialName("is_manager") val isManager: Boolean,
     @SerialName("is_device") val isDevice: Boolean,
     @SerialName("is_gps_active") val isGPSActive: Boolean,
+    @SerialName("can_edit_price") val canEditPrice: Boolean,
     @SerialName("is_liveness_active") val isLivenessActive: Boolean,
     @SerialName("check_in_latitude") val checkInLatitude:Double,
     @SerialName("check_in_longitude") val checkInLongitude:Double,

@@ -61,7 +61,7 @@ class BillingViewModel @Inject constructor(
                 authOrgUser?.let {
                     Log.i("billing_consumer", "token changed from consumer ${it.orgSlug}")
                     _authOrgUser.value = it
-                    syncLocalDataWithServer(it.orgSlug)
+                    //syncLocalDataWithServer(it.orgSlug)
                 }
             }
     }

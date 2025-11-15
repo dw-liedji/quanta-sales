@@ -25,10 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.datavite.eat.data.remote.model.auth.AuthOrgUser
 
 @Composable
 fun OrderVerificationBottomSheet(
     selectedStocks: List<SelectedDomainStock>,
+    authOrgUser: AuthOrgUser?,
     totalAmount: Double,
     onQuantityChange: (stockId: String, newQuantity: Int) -> Unit,
     onPriceChange: (stockId: String, newPrice: Double) -> Unit,
@@ -73,6 +75,7 @@ fun OrderVerificationBottomSheet(
                     items(selectedStocks, key = { it.domainStock.id }) { selected ->
                         SelectedStockCard(
                             selectedStock = selected,
+                            authOrgUser=authOrgUser,
                             onQuantityChange = onQuantityChange,
                             onPriceChange = onPriceChange,
                             onLockToggle = onLockToggle,
