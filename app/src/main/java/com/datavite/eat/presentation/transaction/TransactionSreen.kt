@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,9 +26,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
@@ -63,16 +69,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -92,6 +102,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.TransactionScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Destination<RootGraph>
@@ -618,7 +629,7 @@ fun DetailRow(label: String, value: String) {
         )
     }
 }
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTransactionDialog(
     transactionUiState: TransactionUiState,
@@ -630,21 +641,43 @@ fun CreateTransactionDialog(
     onBrokerChange: (TransactionBroker) -> Unit,
     onCreateTransaction: () -> Unit
 ) {
+    // Auto-focus + keyboard
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(Unit) {
+        delay(200)
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create New Transaction") },
+        title = {
+            Text(
+                "New Transaction",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 // Amount
                 OutlinedTextField(
                     value = transactionUiState.transactionAmount,
                     onValueChange = onAmountChange,
                     label = { Text("Amount (FCFA)") },
                     placeholder = { Text("Enter amount") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        keyboardType = KeyboardType.Number
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
                     )
                 )
 
@@ -653,9 +686,10 @@ fun CreateTransactionDialog(
                     value = transactionUiState.transactionReason,
                     onValueChange = onReasonChange,
                     label = { Text("Reason") },
-                    placeholder = { Text("Enter transaction reason") },
+                    placeholder = { Text("Write a short description") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                 )
 
                 // Participant
@@ -663,45 +697,88 @@ fun CreateTransactionDialog(
                     value = transactionUiState.participant,
                     onValueChange = onParticipantChange,
                     label = { Text("Participant") },
-                    placeholder = { Text("Enter participant name") },
+                    placeholder = { Text("Client / Supplier / Staff") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
                 )
 
                 // Transaction Type
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Text(
+                    "Transaction Type",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium
+                )
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    maxItemsInEachRow = 2
                 ) {
                     TransactionType.entries.forEach { type ->
                         FilterChip(
                             selected = transactionUiState.selectedType == type,
                             onClick = { onTypeChange(type) },
-                            label = { Text(type.name) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = when (type) {
-                                    TransactionType.DEPOSIT -> Color(0xFF4CAF50).copy(alpha = 0.1f)
-                                    TransactionType.WITHDRAWAL -> Color(0xFFF44336).copy(alpha = 0.1f)
-                                },
-                                selectedLabelColor = when (type) {
-                                    TransactionType.DEPOSIT -> Color(0xFF4CAF50)
-                                    TransactionType.WITHDRAWAL -> Color(0xFFF44336)
+                            label = {
+                                Text(
+                                    when (type) {
+                                        TransactionType.DEPOSIT -> "Deposit"
+                                        TransactionType.WITHDRAWAL -> "Withdrawal"
+                                    }
+                                )
+                            },
+                            leadingIcon = {
+                                val icon = when (type) {
+                                    TransactionType.DEPOSIT -> Icons.Default.ArrowDownward
+                                    TransactionType.WITHDRAWAL -> Icons.Default.ArrowUpward
                                 }
+                                Icon(icon, contentDescription = null)
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                                selectedLeadingIconColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
                 }
 
                 // Transaction Broker
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Text(
+                    "Broker",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium
+                )
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    maxItemsInEachRow = 3
                 ) {
                     TransactionBroker.entries.forEach { broker ->
                         FilterChip(
                             selected = transactionUiState.selectedTransactionBroker == broker,
                             onClick = { onBrokerChange(broker) },
-                            label = { Text(broker.name.replace("_", " ")) }
+                            label = {
+                                Text(
+                                    broker.name.replace("_", " ")
+                                        .lowercase()
+                                        .replaceFirstChar { it.uppercase() }
+                                )
+                            },
+                            leadingIcon = {
+                                val icon = when (broker) {
+                                    TransactionBroker.CASHIER -> Icons.Default.Person
+                                    TransactionBroker.ORANGE_MONEY -> Icons.Default.PhoneAndroid
+                                    TransactionBroker.MTN_MOBILE_MONEY -> Icons.Default.SimCard
+                                }
+                                Icon(icon, contentDescription = null)
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f),
+                                selectedLabelColor = MaterialTheme.colorScheme.secondary,
+                                selectedLeadingIconColor = MaterialTheme.colorScheme.secondary
+                            )
                         )
                     }
                 }
@@ -711,7 +788,8 @@ fun CreateTransactionDialog(
             Button(
                 onClick = onCreateTransaction,
                 enabled = transactionUiState.transactionAmount.isNotBlank() &&
-                        transactionUiState.transactionReason.isNotBlank()
+                        transactionUiState.transactionReason.isNotBlank(),
+                modifier = Modifier.padding(end = 4.dp)
             ) {
                 Text("Create")
             }

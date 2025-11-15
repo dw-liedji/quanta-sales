@@ -14,12 +14,16 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,6 +41,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.BillingScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>
@@ -473,7 +478,7 @@ fun PaymentItem(
         }
     }
 }
-
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddPaymentModal(
     billing: DomainBilling?,
@@ -482,86 +487,104 @@ fun AddPaymentModal(
 ) {
     var amount by remember { mutableStateOf("") }
     var selectedBroker by remember { mutableStateOf<TransactionBroker?>(null) }
-    var showBrokerDropdown by remember { mutableStateOf(false) }
-    val due = remember(billing) {
-        billing?.let { it.totalPrice - it.payments.sumOf { payment -> payment.amount } } ?: 0.0
+
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    // Auto-focus amount + open keyboard
+    LaunchedEffect(Unit) {
+        delay(200)
+        focusRequester.requestFocus()
+        keyboardController?.show()
     }
 
-    Column(modifier = Modifier.padding(24.dp)) {
+    val due = remember(billing) {
+        billing?.let { it.totalPrice - it.payments.sumOf { p -> p.amount } } ?: 0.0
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        // Title
         Text(
             "Add Payment",
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
         Text(
             "Remaining due: $due FCFA",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Amount Input
+        // Amount field
         OutlinedTextField(
             value = amount,
             onValueChange = { amount = it },
             label = { Text("Amount (FCFA)") },
-            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Enter amount") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             singleLine = true,
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next
             ),
             trailingIcon = {
                 if (amount.isNotEmpty()) {
                     IconButton(onClick = { amount = "" }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        Icon(Icons.Default.Clear, contentDescription = "Clear amount")
                     }
                 }
             }
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Payment Method Chips
+        Text(
+            "Payment Method",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Medium
+        )
 
-        // Transaction Broker Dropdown
-        Box {
-            OutlinedTextField(
-                value = selectedBroker?.name ?: "",
-                onValueChange = { /* Read-only, handled by dropdown */ },
-                label = { Text("Payment Method") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showBrokerDropdown = true },
-                readOnly = true,
-                trailingIcon = {
-                    Icon(
-                        Icons.Default.ArrowDropDown,
-                        contentDescription = "Select payment method",
-                        modifier = Modifier.clickable { showBrokerDropdown = true }
-                    )
-                }
-            )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            maxItemsInEachRow = 3
+        ) {
+            TransactionBroker.entries.forEach { broker ->
+                val label = broker.name.replace("_", " ")
+                    .lowercase()
+                    .replaceFirstChar { it.uppercase() }
 
-            DropdownMenu(
-                expanded = showBrokerDropdown,
-                onDismissRequest = { showBrokerDropdown = false }
-            ) {
-                TransactionBroker.entries.forEach { broker ->
-                    DropdownMenuItem(
-                        text = { Text(broker.name) },
-                        onClick = {
-                            selectedBroker = broker
-                            showBrokerDropdown = false
+                FilterChip(
+                    selected = selectedBroker == broker,
+                    onClick = { selectedBroker = broker },
+                    label = { Text(label) },
+                    leadingIcon = {
+                        val icon = when (broker) {
+                            TransactionBroker.CASHIER -> Icons.Default.Person
+                            TransactionBroker.ORANGE_MONEY -> Icons.Default.PhoneAndroid
+                            TransactionBroker.MTN_MOBILE_MONEY -> Icons.Default.SimCard
                         }
+                        Icon(icon, contentDescription = null)
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.25f),
+                        selectedLabelColor = MaterialTheme.colorScheme.tertiary,
+                        selectedLeadingIconColor = MaterialTheme.colorScheme.tertiary
                     )
-                }
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(Modifier.height(10.dp))
 
-        // Action Buttons
+        // Action buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -575,20 +598,21 @@ fun AddPaymentModal(
 
             Button(
                 onClick = {
-                    val paymentAmount = amount.toDoubleOrNull() ?: 0.0
-                    val broker = selectedBroker
-                    if (paymentAmount > 0 && broker != null) {
-                        onAddPayment(paymentAmount, broker)
+                    selectedBroker?.let { broker ->
+                        amount.toDoubleOrNull()?.takeIf { it > 0 }?.let { amt ->
+                            onAddPayment(amt, broker)
+                        }
                     }
                 },
                 modifier = Modifier.weight(1f),
-                enabled = (amount.toDoubleOrNull() ?: 0.0) > 0 && selectedBroker != null
+                enabled = selectedBroker != null && (amount.toDoubleOrNull() ?: 0.0) > 0
             ) {
                 Text("Add Payment")
             }
         }
     }
 }
+
 
 @Composable
 fun DeleteConfirmationDialog(
