@@ -461,6 +461,7 @@ class ShoppingViewModel @Inject constructor(
                             id = generateUUIDString(),
                             created = LocalDateTime.now().toString(),
                             modified = LocalDateTime.now().toString(),
+                            orgUserName = authOrgUser.name,
                             orgSlug = authOrgUser.orgSlug,
                             orgId = authOrgUser.orgId,
                             orgUserId = authOrgUser.id,

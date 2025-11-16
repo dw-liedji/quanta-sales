@@ -108,6 +108,14 @@ fun BillingCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+
+                    Text(
+                        text = "User: ${billing.orgUserName}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
 
                 // Payment status indicator

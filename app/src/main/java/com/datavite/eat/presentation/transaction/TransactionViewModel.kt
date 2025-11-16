@@ -126,6 +126,7 @@ class TransactionViewModel @Inject constructor(
                     orgSlug = authUser.orgSlug,
                     orgId = authUser.orgId,
                     orgUserId = authUser.id,
+                    orgUserName = authUser.name,
                     participant = _transactionUiState.value.participant,
                     reason = _transactionUiState.value.transactionReason,
                     amount = amount,

@@ -157,6 +157,7 @@ class BillingViewModel @Inject constructor(
                         orgSlug = orgUser.orgSlug,
                         orgId = orgUser.orgId,
                         orgUserId = orgUser.id,
+                        orgUserName = orgUser.name,
                         participant = updatedBilling.customerName,
                         reason = "Paiement dette facture #${updatedBilling.billNumber} de ${updatedBilling.customerName}",
                         amount = amount,

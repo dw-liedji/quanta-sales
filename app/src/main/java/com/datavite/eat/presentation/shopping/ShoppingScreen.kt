@@ -149,6 +149,7 @@ fun ShoppingScreen(
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
 
+                if (authOrgUser?.canPrintBill == true)
                 shoppingUiState.lastestBilling?.let { billing ->
                     val billingPdfView = rememberBillPdfView(billing)
                     billingPdfView?.let {

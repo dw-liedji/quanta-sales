@@ -410,7 +410,7 @@ fun BillingDetailModal(
                 Text("Delete", fontSize = 11.sp)
             }
 
-            OutlinedButton(
+            if(authOrgUser.isManager || authOrgUser.isAdmin || authOrgUser.canPrintBill) OutlinedButton(
                 onClick = onPrintBill,
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(vertical = 4.dp)

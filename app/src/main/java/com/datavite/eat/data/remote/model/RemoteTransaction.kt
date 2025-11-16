@@ -14,6 +14,7 @@ data class RemoteTransaction(
     @SerialName("organization_slug") val orgSlug: String,
     @SerialName("organization_id") val orgId: String,
     @SerialName("organization_user_id") val orgUserId: String,
+    @SerialName("organization_user_name") val orgUserName: String,
     @SerialName("participant")  val participant: String,
     @SerialName("reason") val reason: String,
     @SerialName("amount") val amount: Double,

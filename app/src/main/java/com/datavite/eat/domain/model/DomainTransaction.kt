@@ -12,6 +12,7 @@ data class DomainTransaction(
     val orgSlug: String,
     val orgId: String,
     val orgUserId: String,
+    val orgUserName: String,
     val participant: String,
     val reason: String,
     val amount: Double,

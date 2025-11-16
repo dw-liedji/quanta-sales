@@ -244,6 +244,7 @@ fun TransactionScreen(
         }
     }
 }
+
 @Composable
 fun TransactionCard(
     transaction: DomainTransaction,
@@ -432,6 +433,14 @@ fun TransactionCard(
                         maxLines = 1
                     )
                 }
+
+                Text(
+                    text = "User: ${transaction.orgUserName}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
 
             // Amount section - Fixed width to prevent layout shifts
@@ -589,15 +598,17 @@ fun TransactionDetailModal(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp) // Reduced spacing
         ) {
-            if (authOrgUser!!.isAdmin || authOrgUser.isManager)
-            OutlinedButton(
-                onClick = onPrintTransaction,
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(vertical = 4.dp)
-            ) {
-                Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(14.dp))
-                Spacer(modifier = Modifier.width(2.dp))
-                Text("Print", fontSize = 11.sp)
+            authOrgUser?.let {
+                if (it.isAdmin || it.isManager || it.canPrintTransaction)
+                OutlinedButton(
+                    onClick = onPrintTransaction,
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(vertical = 4.dp)
+                ) {
+                    Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text("Print", fontSize = 11.sp)
+                }
             }
 
             Button(
