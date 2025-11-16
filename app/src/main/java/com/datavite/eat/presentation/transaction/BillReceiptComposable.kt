@@ -66,7 +66,7 @@ fun BillReceiptComposable(billing: DomainBilling) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text("Phone:", style = MaterialTheme.typography.bodyLarge)
             Spacer(modifier = Modifier.weight(1f))
-            Text(billing.customerPhoneNumber, style = MaterialTheme.typography.bodyLarge)
+            Text(billing.customerPhoneNumber ?: "", style = MaterialTheme.typography.bodyLarge)
         }
 
         Spacer(modifier = Modifier.height(16.dp))

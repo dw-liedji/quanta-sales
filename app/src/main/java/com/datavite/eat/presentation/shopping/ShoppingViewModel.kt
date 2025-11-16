@@ -280,7 +280,7 @@ class ShoppingViewModel @Inject constructor(
         authOrgUser: AuthOrgUser,
         customerId: String,
         customerName: String,
-        customerPhoneNumber: String,
+        customerPhoneNumber: String?,
         billNumber: String,
         initialPayment: Double = 0.0,
         paymentBroker: TransactionBroker = TransactionBroker.CASHIER
@@ -449,7 +449,7 @@ class ShoppingViewModel @Inject constructor(
                             authOrgUser = authOrgUser,
                             customerId = customerId,
                             customerName = customerName,
-                            customerPhoneNumber = customerPhoneNumber!!,
+                            customerPhoneNumber = customerPhoneNumber,
                             billNumber = "BILL-${System.currentTimeMillis()}",
                             initialPayment = initialPayment,
                             paymentBroker = paymentBroker
@@ -543,7 +543,7 @@ class ShoppingViewModel @Inject constructor(
         } else {
             customers.filter { customer ->
                 customer.name.contains(searchQuery, ignoreCase = true) ||
-                        customer.phoneNumber!!.contains(searchQuery, ignoreCase = true)
+                        customer.phoneNumber?.contains(searchQuery, ignoreCase = true) == true
             }
         }
     }
@@ -623,7 +623,7 @@ class ShoppingViewModel @Inject constructor(
                 val newCustomer = DomainCustomer(
                     id = generateUUIDString(),
                     name = currentState.customerName.trim(),
-                    phoneNumber = currentState.customerPhone.trim(),
+                    phoneNumber = currentState.customerPhone?.trim(),
                     created = LocalDateTime.now().toString(),
                     modified = LocalDateTime.now().toString(),
                     orgSlug = authOrgUser.value?.orgSlug ?: "",

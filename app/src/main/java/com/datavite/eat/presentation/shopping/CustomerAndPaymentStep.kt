@@ -290,11 +290,13 @@ fun CustomerListItem(
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    customer.phoneNumber!!,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                customer.phoneNumber?.let { phoneNumber ->
+                    Text(
+                        phoneNumber,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Icon(
                 Icons.Default.ChevronRight,
@@ -338,7 +340,7 @@ fun EmptyCustomerState(hasSearchQuery: Boolean) {
 @Composable
 fun CreateCustomerForm(
     customerName: String,
-    customerPhone: String,
+    customerPhone: String?,
     onNameChange: (String) -> Unit,
     onPhoneChange: (String) -> Unit,
     onSave: () -> Unit,
@@ -380,18 +382,14 @@ fun CreateCustomerForm(
             )
 
             OutlinedTextField(
-                value = customerPhone,
+                value = customerPhone ?: "",
                 onValueChange = onPhoneChange,
                 label = { Text("Téléphone *") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 placeholder = { Text("Ex: 0123456789") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                supportingText = {
-                    when {
-                        !customerPhone.isValidPhone() -> Text("Format invalide", color = MaterialTheme.colorScheme.error)
-                    }
-                },
+
 
             )
 
@@ -447,11 +445,13 @@ fun SelectedCustomerCard(
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         fontWeight = FontWeight.SemiBold
                     )
-                    Text(
-                        customer.phoneNumber!!,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                    )
+                    customer.phoneNumber?.let { phoneNumber ->
+                        Text(
+                            phoneNumber,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
                 }
                 IconButton(
                     onClick = onClearSelection,

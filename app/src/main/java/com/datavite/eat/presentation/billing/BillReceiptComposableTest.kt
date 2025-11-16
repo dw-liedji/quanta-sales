@@ -79,7 +79,7 @@ fun BillReceiptComposableWithHeader(billing: DomainBilling) {
         CompactInfoRow(label = "Bill #:", value = billing.billNumber)
         CompactInfoRow(label = "Date:", value = SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault()).format(Date()))
         CompactInfoRow(label = "Client:", value = billing.customerName)
-        CompactInfoRow(label = "Téléphone:", value = billing.customerPhoneNumber)
+        CompactInfoRow(label = "Téléphone:", value = billing.customerPhoneNumber ?:"")
 
         Spacer(modifier = Modifier.height(2.dp))
         HorizontalDivider(modifier = Modifier.fillMaxWidth(), thickness = 0.5.dp)

@@ -262,7 +262,7 @@ class BillingViewModel @Inject constructor(
         } else {
             billings.filter { billing ->
                 billing.customerName.contains(searchQuery, ignoreCase = true) ||
-                        billing.customerPhoneNumber.contains(searchQuery, ignoreCase = true)
+                        billing.customerPhoneNumber?.contains(searchQuery, ignoreCase = true) == true
             }
         }
     }

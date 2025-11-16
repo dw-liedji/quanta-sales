@@ -14,7 +14,7 @@ data class DomainBilling(
     val placedAt: String,
     val customerId: String,
     val customerName: String,
-    val customerPhoneNumber: String,
+    val customerPhoneNumber: String?,
     val isPay: Boolean,
     val isApproved: Boolean,
     val isDelivered: Boolean,

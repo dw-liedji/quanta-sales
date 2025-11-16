@@ -12,5 +12,4 @@ data class LocalCustomer(
     val orgId: String,
     val name: String,
     val phoneNumber: String?,
-    val syncStatus: SyncStatus,
-    )
+    val syncStatus: SyncStatus)

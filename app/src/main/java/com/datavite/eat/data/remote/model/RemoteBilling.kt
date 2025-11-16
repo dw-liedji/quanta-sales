@@ -27,7 +27,7 @@ data class RemoteBilling(
     @SerialName("customer_name")
     val customerName: String,
     @SerialName("customer_phone_number")
-    val customerPhoneNumber: String,
+    val customerPhoneNumber: String?,
     @SerialName("is_pay")
     val isPay: Boolean,
     @SerialName("is_approved")

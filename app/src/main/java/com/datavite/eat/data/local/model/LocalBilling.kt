@@ -18,7 +18,7 @@ data class LocalBilling(
     val placedAt: String,
     val customerId: String,
     val customerName: String,
-    val customerPhoneNumber: String,
+    val customerPhoneNumber: String?,
     val isPay: Boolean,
     val isApproved: Boolean = false,
     val isDelivered: Boolean = false,

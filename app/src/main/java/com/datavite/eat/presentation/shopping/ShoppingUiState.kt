@@ -20,7 +20,7 @@ data class ShoppingUiState(
     val customerSearchQuery: String = "",
     val stockSearchQuery: String = "", // ✅ NEW FIELD
     val customerName: String = "",
-    val customerPhone: String = "",
+    val customerPhone: String? = null,
     val isCreatingNewCustomer: Boolean = false,
     val paymentAmount: String = "",
     val paymentBroker: TransactionBroker? = null,
