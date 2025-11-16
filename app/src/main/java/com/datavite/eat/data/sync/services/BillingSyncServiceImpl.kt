@@ -92,19 +92,19 @@ class BillingSyncServiceImpl @Inject constructor(
             }
 
             // Remove operation after success
-            pendingOperationDao.deleteById(currentOperation.id)
+            pendingOperationDao.deleteByKeys(entityType = currentOperation.entityType, entityId = currentOperation.entityId, operationType = currentOperation.operationType, orgId = currentOperation.orgId)
 
             // Update sync status depending on remaining operations
             val newStatus = if ((totalPending - 1) > 0) SyncStatus.PENDING else SyncStatus.SYNCED
             localDataSource.updateSyncStatus(currentOperation.entityId, newStatus)
 
         } catch (e: Exception) {
-            pendingOperationDao.incrementFailureCount(currentOperation.id)
-            val failureCount = pendingOperationDao.getFailureCount(currentOperation.id)
+            pendingOperationDao.incrementFailureCount(entityType = currentOperation.entityType, entityId = currentOperation.entityId, operationType = currentOperation.operationType, orgId = currentOperation.orgId)
+            val failureCount = pendingOperationDao.getFailureCount(entityType = currentOperation.entityType, entityId = currentOperation.entityId, operationType = currentOperation.operationType, orgId = currentOperation.orgId)
             val status = if (failureCount > 5) SyncStatus.FAILED else SyncStatus.PENDING
             localDataSource.updateSyncStatus(currentOperation.entityId, status)
 
-            Log.e("BillingSyncOperation", "Failed operation ${currentOperation.id}", e)
+            Log.e("BillingSyncOperation", "Failed operation ${currentOperation.operationType} ${currentOperation.entityType} ${currentOperation.entityId}", e)
         }
     }
 

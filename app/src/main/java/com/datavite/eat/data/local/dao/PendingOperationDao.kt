@@ -2,37 +2,85 @@ package com.datavite.eat.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.datavite.eat.data.local.model.PendingOperation
+import com.datavite.eat.domain.PendingOperationEntityType
+import com.datavite.eat.domain.PendingOperationType
 import kotlinx.coroutines.flow.Flow
+
 @Dao
 interface PendingOperationDao {
 
-    @Query("SELECT failedAttempts FROM pending_operations WHERE id = :operationId")
-    suspend fun getFailureCount(operationId: Long): Int
-    @Insert
+    // 🔥 Insert or replace based on composite PK
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(operation: PendingOperation)
 
+    // 🔥 Get next operations FIFO
     @Query("SELECT * FROM pending_operations ORDER BY createdAt ASC LIMIT :limit")
     suspend fun getNextOperations(limit: Int = 50): List<PendingOperation>
 
+    // 🔥 Retry-eligible operations
     @Query("""
-        SELECT * FROM pending_operations 
-        WHERE failedAttempts < :maxRetries 
+        SELECT * FROM pending_operations
+        WHERE failedAttempts < :maxRetries
         ORDER BY createdAt ASC LIMIT :limit
     """)
-    suspend fun getNextOperationsEligibleForRetry(limit: Int = 50, maxRetries: Int = 5): List<PendingOperation>
+    suspend fun getNextOperationsEligibleForRetry(
+        limit: Int = 50,
+        maxRetries: Int = 5
+    ): List<PendingOperation>
 
-    @Query("DELETE FROM pending_operations WHERE id = :id")
-    suspend fun deleteById(id: Long)
+    // 🔥 Delete using composite key (since id no longer exists)
+    @Query("""
+        DELETE FROM pending_operations 
+        WHERE entityType = :entityType
+        AND entityId = :entityId
+        AND orgId = :orgId
+        AND operationType = :operationType
+    """)
+    suspend fun deleteByKeys(
+        entityType: PendingOperationEntityType,
+        entityId: String,
+        orgId: String,
+        operationType: PendingOperationType
+    )
 
-    @Query("UPDATE pending_operations SET failedAttempts = failedAttempts + 1 WHERE id = :id")
-    suspend fun incrementFailureCount(id: Long)
+    // 🔥 Increment failure count
+    @Query("""
+        UPDATE pending_operations
+        SET failedAttempts = failedAttempts + 1
+        WHERE entityType = :entityType
+        AND entityId = :entityId
+        AND orgId = :orgId
+        AND operationType = :operationType
+    """)
+    suspend fun incrementFailureCount(
+        entityType: PendingOperationEntityType,
+        entityId: String,
+        orgId: String,
+        operationType: PendingOperationType
+    )
 
+    // 🔥 Required for some logic (get failure count)
+    @Query("""
+        SELECT failedAttempts FROM pending_operations
+        WHERE entityType = :entityType
+        AND entityId = :entityId
+        AND orgId = :orgId
+        AND operationType = :operationType
+    """)
+    suspend fun getFailureCount(
+        entityType: PendingOperationEntityType,
+        entityId: String,
+        orgId: String,
+        operationType: PendingOperationType
+    ): Int
+
+    // 🔥 Monitoring flows
     @Query("SELECT COUNT(*) FROM pending_operations")
     fun getPendingCountFlow(): Flow<Int>
 
     @Query("SELECT * FROM pending_operations ORDER BY createdAt ASC")
     fun getAllPendingOperationsFlow(): Flow<List<PendingOperation>>
-
 }

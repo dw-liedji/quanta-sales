@@ -55,6 +55,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainTransaction.orgSlug,
+            orgId = domainTransaction.orgId,
             entityId = domainTransaction.id,
             entityType = PendingOperationEntityType.Transaction,
             operationType = PendingOperationType.CREATE,
@@ -77,6 +78,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainTransaction.orgSlug,
+            orgId = domainTransaction.orgId,
             entityId = domainTransaction.id,
             entityType = PendingOperationEntityType.Transaction,
             operationType = PendingOperationType.UPDATE,
@@ -94,6 +96,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainTransaction.orgSlug,
+            orgId = domainTransaction.orgId,
             entityId = domainTransaction.id,
             entityType = PendingOperationEntityType.Transaction,
             operationType = PendingOperationType.DELETE,

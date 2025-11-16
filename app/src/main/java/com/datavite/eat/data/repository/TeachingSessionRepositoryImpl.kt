@@ -65,6 +65,7 @@ class TeachingSessionRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainTeachingSession.orgSlug,
+            orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
             entityType = PendingOperationEntityType.Session,
             operationType = PendingOperationType.CREATE,
@@ -88,6 +89,7 @@ class TeachingSessionRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainTeachingSession.orgSlug,
+            orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
             entityType = PendingOperationEntityType.Session,
             operationType = PendingOperationType.UPDATE,
@@ -103,6 +105,7 @@ class TeachingSessionRepositoryImpl @Inject constructor(
         val remote = teachingSessionMapper.mapDomainToRemote(domainTeachingSession)
         val operation = PendingOperation(
             orgSlug = domainTeachingSession.orgSlug,
+            orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
             entityType = PendingOperationEntityType.Session,
             operationType = PendingOperationType.DELETE,
@@ -131,6 +134,7 @@ class TeachingSessionRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainTeachingSession.orgSlug,
+            orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
             entityType = PendingOperationEntityType.Session,
             operationType = PendingOperationType.APPROVE_SESSION,
@@ -161,6 +165,7 @@ class TeachingSessionRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainTeachingSession.orgSlug,
+            orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
             entityType = PendingOperationEntityType.Session,
             operationType = PendingOperationType.START_SESSION,
@@ -189,6 +194,7 @@ class TeachingSessionRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainTeachingSession.orgSlug,
+            orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
             entityType = PendingOperationEntityType.Session,
             operationType = PendingOperationType.END_SESSION,

@@ -6,17 +6,21 @@ import com.datavite.eat.domain.PendingOperationEntityType
 import com.datavite.eat.domain.PendingOperationType
 import kotlinx.serialization.json.Json
 
-@Entity(tableName = "pending_operations")
+@Entity(
+    tableName = "pending_operations",
+    primaryKeys = ["entityType", "entityId", "orgId", "operationType"]
+)
 data class PendingOperation(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val entityType: PendingOperationEntityType,         // "session", "attendance", etc.
-    val entityId: String,           // UUID or numeric ID
-    val orgSlug: String,           // UUID or numeric ID
-    val operationType: PendingOperationType,      // "CREATE", "UPDATE", "DELETE"
-    val payloadJson: String,        // Full object JSON
-    val createdAt: Long = System.currentTimeMillis(),  // For FIFO order
-    val failedAttempts: Int = 0     // For retry limit (optional safety)
-){
+    val entityType: PendingOperationEntityType,
+    val entityId: String,
+    val orgSlug: String,
+    val orgId: String,
+    val operationType: PendingOperationType,
+    val payloadJson: String,
+    val createdAt: Long = System.currentTimeMillis(),
+    val failedAttempts: Int = 0
+)
+{
     // Helper function to create payload
     inline fun <reified T> parsePayload(): T {
         return Json.decodeFromString(payloadJson)

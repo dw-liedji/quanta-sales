@@ -58,6 +58,7 @@ class BillingRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainBilling.orgSlug,
+            orgId  = domainBilling.orgId,
             entityId = domainBilling.id,
             entityType = PendingOperationEntityType.Billing,
             operationType = PendingOperationType.CREATE,
@@ -93,6 +94,7 @@ class BillingRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainBilling.orgSlug,
+            orgId = domainBilling.orgId,
             entityId = domainBilling.id,
             entityType = PendingOperationEntityType.Billing,
             operationType = PendingOperationType.UPDATE,
@@ -124,6 +126,7 @@ class BillingRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainBilling.orgSlug,
+            orgId = domainBilling.orgId,
             entityId = domainBilling.id,
             entityType = PendingOperationEntityType.Billing,
             operationType = PendingOperationType.DELETE,

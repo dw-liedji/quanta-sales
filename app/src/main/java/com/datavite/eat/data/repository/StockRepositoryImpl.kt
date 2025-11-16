@@ -53,6 +53,7 @@ class StockRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainStock.orgSlug,
+            orgId = domainStock.orgId,
             entityId = domainStock.id,
             entityType = PendingOperationEntityType.Stock,
             operationType = PendingOperationType.CREATE,
@@ -76,6 +77,7 @@ class StockRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainStock.orgSlug,
+            orgId = domainStock.orgId,
             entityId = domainStock.id,
             entityType = PendingOperationEntityType.Stock,
             operationType = PendingOperationType.UPDATE,
@@ -94,6 +96,7 @@ class StockRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainStock.orgSlug,
+            orgId = domainStock.orgId,
             entityId = domainStock.id,
             entityType = PendingOperationEntityType.Stock,
             operationType = PendingOperationType.DELETE,

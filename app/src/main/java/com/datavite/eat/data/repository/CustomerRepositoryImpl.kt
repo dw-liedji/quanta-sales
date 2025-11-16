@@ -53,6 +53,7 @@ class CustomerRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainCustomer.orgSlug,
+            orgId = domainCustomer.orgId,
             entityId = domainCustomer.id,
             entityType = PendingOperationEntityType.Customer,
             operationType = PendingOperationType.CREATE,
@@ -86,6 +87,7 @@ class CustomerRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainCustomer.orgSlug,
+            orgId = domainCustomer.orgId,
             entityId = domainCustomer.id,
             entityType = PendingOperationEntityType.Customer,
             operationType = PendingOperationType.UPDATE,
@@ -104,6 +106,7 @@ class CustomerRepositoryImpl @Inject constructor(
 
         val operation = PendingOperation(
             orgSlug = domainCustomer.orgSlug,
+            orgId = domainCustomer.orgId,
             entityId = domainCustomer.id,
             entityType = PendingOperationEntityType.Customer,
             operationType = PendingOperationType.DELETE,

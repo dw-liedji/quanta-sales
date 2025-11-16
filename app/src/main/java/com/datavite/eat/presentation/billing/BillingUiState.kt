@@ -10,6 +10,6 @@ data class BillingUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val infoMessage: String? = null,
-    val isPaymentSheetVisible: Boolean = false,
+    val isAddPaymentDialogVisible: Boolean = false,
     val isDeleteDialogVisible: Boolean = false
 )

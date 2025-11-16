@@ -31,6 +31,7 @@ class StudentAttendanceRepositoryImpl @Inject constructor (
 
         val operation = PendingOperation(
             orgSlug = attendance.orgSlug,
+            orgId = attendance.orgId,
             entityId = attendance.id,
             entityType = PendingOperationEntityType.Attendance,
             operationType = PendingOperationType.CREATE,
@@ -49,6 +50,7 @@ class StudentAttendanceRepositoryImpl @Inject constructor (
 
         val operation = PendingOperation(
             orgSlug = attendance.orgSlug,
+            orgId = attendance.orgId,
             entityId = attendance.id,
             entityType = PendingOperationEntityType.Attendance,
             operationType = PendingOperationType.UPDATE,
@@ -67,6 +69,7 @@ class StudentAttendanceRepositoryImpl @Inject constructor (
 
         val operation = PendingOperation(
             orgSlug = attendance.orgSlug,
+            orgId = attendance.orgId,
             entityId = attendance.id,
             entityType = PendingOperationEntityType.Attendance,
             operationType = PendingOperationType.DELETE,

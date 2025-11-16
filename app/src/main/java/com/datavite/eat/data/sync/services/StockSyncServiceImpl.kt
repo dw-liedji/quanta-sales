@@ -98,7 +98,7 @@ class StockSyncServiceImpl @Inject constructor(
             }
 
             // Delete the completed operation
-            pendingOperationDao.deleteById(currentOperation.id)
+            pendingOperationDao.deleteByKeys(entityType = currentOperation.entityType, entityId = currentOperation.entityId, operationType = currentOperation.operationType, orgId = currentOperation.orgId)
 
             // If other pending operations remain, status is still pending
             if ((totalPending - 1) > 0) {
@@ -106,21 +106,21 @@ class StockSyncServiceImpl @Inject constructor(
             } else {
                 localDataSource.updateSyncStatus(currentOperation.entityId, SyncStatus.SYNCED)
             }
-            Log.i("StockSyncOperation", "Success to StockSyncOperation operation ${currentOperation.id}")
+            Log.i("StockSyncOperation", "Success to StockSyncOperation operation  ${currentOperation.operationType} ${currentOperation.entityType} ${currentOperation.entityId}")
 
         } catch (e: Exception) {
             // Increment failure count
-            pendingOperationDao.incrementFailureCount(currentOperation.id)
+            pendingOperationDao.incrementFailureCount(entityType = currentOperation.entityType, entityId = currentOperation.entityId, operationType = currentOperation.operationType, orgId = currentOperation.orgId)
 
             // Get updated failure count to decide status
-            val updatedFailureCount = pendingOperationDao.getFailureCount(currentOperation.id)
+            val updatedFailureCount = pendingOperationDao.getFailureCount(entityType = currentOperation.entityType, entityId = currentOperation.entityId, operationType = currentOperation.operationType, orgId = currentOperation.orgId)
 
             if (updatedFailureCount > 5) {
                 localDataSource.updateSyncStatus(currentOperation.entityId, SyncStatus.FAILED)
             } else {
                 localDataSource.updateSyncStatus(currentOperation.entityId, SyncStatus.PENDING)
             }
-            Log.e("StockSyncOperation", "Failed to StockSyncOperation operation ${currentOperation.id}")
+            Log.e("BillingSyncOperation", "Failed operation ${currentOperation.operationType} ${currentOperation.entityType} ${currentOperation.entityId}", e)
 
             e.printStackTrace()
         }

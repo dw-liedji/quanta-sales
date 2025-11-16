@@ -107,7 +107,7 @@ class BillingViewModel @Inject constructor(
         _billingUiState.update {
             it.copy(
                 selectedBilling = null,
-                isPaymentSheetVisible = false,
+                isAddPaymentDialogVisible = false,
                 isDeleteDialogVisible = false
             )
         }
@@ -116,15 +116,18 @@ class BillingViewModel @Inject constructor(
     // -------------------------
     // Payment Management
     // -------------------------
-    fun showPaymentSheet() {
-        _billingUiState.update { it.copy(isPaymentSheetVisible = true) }
+    fun showAddPaymentDialog() {
+        _billingUiState.update { it.copy(isAddPaymentDialogVisible = true) }
     }
 
-    fun hidePaymentSheet() {
-        _billingUiState.update { it.copy(isPaymentSheetVisible = false) }
+    fun hideAddPaymentDialog() {
+        _billingUiState.update { it.copy(isAddPaymentDialogVisible = false) }
     }
 
     fun addPayment(amount: Double, transactionBroker: TransactionBroker) {
+
+        hideAddPaymentDialog()
+
         val selectedBilling = _billingUiState.value.selectedBilling ?: return
 
         viewModelScope.launch(Dispatchers.IO) {
@@ -147,8 +150,6 @@ class BillingViewModel @Inject constructor(
                         payments = selectedBilling.payments + newPayment
                     )
 
-                    billingRepository.updateBilling(updatedBilling)
-
                     val newTransaction = DomainTransaction(
                         id = generateUUIDString(),
                         created = LocalDateTime.now().toString(),
@@ -164,11 +165,10 @@ class BillingViewModel @Inject constructor(
                         syncStatus = SyncStatus.PENDING
                     )
 
+                    _billingUiState.update { it.copy(selectedBilling = updatedBilling) }
+                    billingRepository.updateBilling(updatedBilling)
                     transactionRepository.createTransaction(newTransaction)
 
-                    _billingUiState.update { it.copy(selectedBilling = updatedBilling) }
-
-                    hidePaymentSheet()
                     showInfoMessage("Payment of $amount FCFA added successfully")
 
                     // Sync with server
