@@ -17,6 +17,8 @@ interface TransactionLocalDataSource {
     suspend fun updateSyncStatus(id: String, syncStatus: SyncStatus)
     suspend fun clear()
     suspend fun deleteLocalTransaction(localTransaction: LocalTransaction)
+    suspend fun deleteLocalTransactionById(transactionId: String)
+
     suspend fun getLocalTransactionCount(): Int
 
     // Additional transaction-specific methods

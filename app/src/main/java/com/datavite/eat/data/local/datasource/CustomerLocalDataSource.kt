@@ -16,6 +16,7 @@ interface CustomerLocalDataSource {
     suspend fun updateSyncStatus(id: String,  syncStatus: SyncStatus)
     suspend fun clear()
     suspend fun deleteLocalCustomer(localCustomer: LocalCustomer)
+    suspend fun deleteLocalTransactionById(transactionId: String)
     suspend fun getLocalCustomerCount():Int
 
 }

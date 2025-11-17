@@ -59,6 +59,9 @@ interface LocalBillingDao {
     @Delete
     suspend fun deleteBilling(billing: LocalBilling)
 
+    @Query("DELETE FROM localBillings WHERE id = :billingId")
+    suspend fun deleteBillingById(billingId: String)
+
     // --- Get all billings with items ---
     @Transaction
     @Query("SELECT * FROM localBillings ORDER BY created DESC")

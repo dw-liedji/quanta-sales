@@ -52,6 +52,10 @@ class TransactionLocalDataSourceImpl @Inject constructor(
         localTransactionDao.deleteLocalTransaction(localTransaction.id)
     }
 
+    override suspend fun deleteLocalTransactionById(transactionId: String) {
+        localTransactionDao.deleteLocalTransaction(transactionId)
+    }
+
     override suspend fun getLocalTransactionCount(): Int {
         return localTransactionDao.getLocalTransactionCount()
     }

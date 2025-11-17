@@ -38,6 +38,10 @@ class BillingLocalDataSourceImpl @Inject constructor (
         localBillingDao.deleteBilling(billing)
     }
 
+    override suspend fun deleteLocalBillingById(billingId: String) {
+        localBillingDao.deleteBillingById(billingId)
+    }
+
     override suspend fun updateSyncStatus(
         id: String,
         syncStatus: SyncStatus

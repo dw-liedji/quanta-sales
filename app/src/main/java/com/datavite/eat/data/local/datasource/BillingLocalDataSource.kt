@@ -13,6 +13,7 @@ interface BillingLocalDataSource {
         suspend fun insertLocalBillingWithItemsAndPaymentsRelation(billingWithItemsAndPaymentsRelation: LocalBillingWithItemsAndPaymentsRelation)
         suspend fun saveLocalBillingsWithItemsAndPaymentsRelations(list: List<LocalBillingWithItemsAndPaymentsRelation>)
         suspend fun deleteLocalBilling(billing: LocalBilling)
+        suspend fun deleteLocalBillingById(billingId: String)
         suspend fun updateSyncStatus(id: String,  syncStatus: SyncStatus)
 
 }

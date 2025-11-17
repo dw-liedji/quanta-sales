@@ -15,6 +15,7 @@ interface StockLocalDataSource {
     suspend fun updateSyncStatus(id: String,  syncStatus: SyncStatus)
     suspend fun clear()
     suspend fun deleteLocalStock(localStock: LocalStock)
+    suspend fun deleteLocalStockById(localStockId: String)
     suspend fun getLocalStockCount():Int
 
 }

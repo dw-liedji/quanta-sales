@@ -52,6 +52,10 @@ class StockLocalDataSourceImpl @Inject constructor (
         localStockDao.deleteLocalStock(localStock.id)
     }
 
+    override suspend fun deleteLocalStockById(localStockId: String) {
+        localStockDao.deleteLocalStock(localStockId)
+    }
+
     override suspend fun getLocalStockCount(): Int {
         return localStockDao.getLocalStockCount()
     }
