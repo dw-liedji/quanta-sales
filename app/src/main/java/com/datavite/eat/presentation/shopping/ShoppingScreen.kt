@@ -150,12 +150,12 @@ fun ShoppingScreen(
             Box(modifier = Modifier.fillMaxSize()) {
 
                 if (authOrgUser?.canPrintBill == true)
-                shoppingUiState.lastestBilling?.let { billing ->
-                    val billingPdfView = rememberBillPdfView(billing)
-                    billingPdfView?.let {
-                        BillPDFExporter.exportBillToPDF(context, it, billing.billNumber )
-                    } ?: Toast.makeText(context, "Bill view not ready", Toast.LENGTH_SHORT).show()
-                }
+                    shoppingUiState.lastestBilling?.let { billing ->
+                        val billingPdfView = rememberBillPdfView(billing)
+                        billingPdfView?.let {
+                            BillPDFExporter.exportBillToPDF(context, it, billing.billNumber )
+                        } ?: Toast.makeText(context, "Bill view not ready", Toast.LENGTH_SHORT).show()
+                    }
 
                 when (shoppingUiState.checkoutStep) {
                     CheckoutStep.REVIEW_ITEMS -> {

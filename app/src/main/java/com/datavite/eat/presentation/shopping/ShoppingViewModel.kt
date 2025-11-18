@@ -457,24 +457,6 @@ class ShoppingViewModel @Inject constructor(
 
                         billingRepository.createBilling(newBilling)
 
-                        val newTransaction = DomainTransaction(
-                            id = generateUUIDString(),
-                            created = LocalDateTime.now().toString(),
-                            modified = LocalDateTime.now().toString(),
-                            orgUserName = authOrgUser.name,
-                            orgSlug = authOrgUser.orgSlug,
-                            orgId = authOrgUser.orgId,
-                            orgUserId = authOrgUser.id,
-                            participant = customerName,
-                            reason = "Paiement initial facture #${newBilling.billNumber} de $customerName",
-                            amount = initialPayment,
-                            transactionType = TransactionType.DEPOSIT,
-                            transactionBroker = paymentBroker,
-                            syncStatus = SyncStatus.PENDING
-                        )
-
-                        transactionRepository.createTransaction(newTransaction)
-
                         // Reset state after successful order
                         _shoppingUiState.update {
                             it.copy(
@@ -496,6 +478,28 @@ class ShoppingViewModel @Inject constructor(
                         _shoppingUiState.update { it.copy(lastestBilling = null) }
 
                         showInfoMessage("Facture créée avec paiement initial!")
+
+
+                        if (initialPayment > 0 ) {
+
+                            val newTransaction = DomainTransaction(
+                                id = generateUUIDString(),
+                                created = LocalDateTime.now().toString(),
+                                modified = LocalDateTime.now().toString(),
+                                orgUserName = authOrgUser.name,
+                                orgSlug = authOrgUser.orgSlug,
+                                orgId = authOrgUser.orgId,
+                                orgUserId = authOrgUser.id,
+                                participant = customerName,
+                                reason = "Paiement initial facture #${newBilling.billNumber} de $customerName",
+                                amount = initialPayment,
+                                transactionType = TransactionType.DEPOSIT,
+                                transactionBroker = paymentBroker,
+                                syncStatus = SyncStatus.PENDING
+                            )
+
+                            transactionRepository.createTransaction(newTransaction)
+                        }
 
                         // Sync with server
                         authOrgUser.let { syncOrchestrator.push(it.orgSlug) }

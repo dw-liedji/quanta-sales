@@ -41,7 +41,7 @@ data class ShoppingUiState(
     val shouldShowCustomerForm: Boolean get() = checkoutStep == CheckoutStep.CUSTOMER_INFO
     val isInCreateCustomerMode: Boolean get() = isCreatingNewCustomer && checkoutStep == CheckoutStep.CUSTOMER_INFO
     val isPaymentValid: Boolean
-        get() = paymentAmount.toDoubleOrNull()?.let { it > 0 } == true && paymentBroker != null
+        get() = paymentAmount.toDoubleOrNull()?.let { it >= 0 } == true && paymentBroker != null
 }
 
 private fun String.isValidPhone(): Boolean =
