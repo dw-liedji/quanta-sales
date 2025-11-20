@@ -21,6 +21,7 @@ import com.datavite.eat.data.local.dao.PendingNotificationDao
 import com.datavite.eat.data.local.dao.PendingOperationDao
 import com.datavite.eat.data.local.dao.RoomDao
 import com.datavite.eat.data.local.dao.StudentAttendanceDao
+import com.datavite.eat.data.local.dao.SyncMetadataDao
 import com.datavite.eat.data.local.dao.TeachingPeriodDao
 import com.datavite.eat.data.local.dao.WorkingPeriodDao
 import com.datavite.eat.data.local.model.LocalBilling
@@ -44,9 +45,11 @@ import com.datavite.eat.data.local.model.LocalTransaction
 import com.datavite.eat.data.local.model.LocalWorkingPeriod
 import com.datavite.eat.data.local.model.PendingNotificationAction
 import com.datavite.eat.data.local.model.PendingOperation
+import com.datavite.eat.data.local.model.SyncMetadata
 
 @Database(entities = [
     LocalOrganizationUser::class,
+    SyncMetadata::class,
     PendingOperation::class,
     PendingNotificationAction::class,
     LocalEmployee::class,
@@ -66,7 +69,8 @@ import com.datavite.eat.data.local.model.PendingOperation
     LocalBilling::class,
     LocalBillingItem::class,
     LocalBillingPayment::class,
-    LocalTransaction::class],
+    LocalTransaction::class,
+     ],
     version = 1,
     exportSchema = false
 )
@@ -97,4 +101,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun localTransactionDao(): LocalTransactionDao
     abstract fun localBillingDao(): LocalBillingDao
     abstract fun localBillingItemDao(): LocalBillingItemDao
+    abstract fun syncMetadataDao(): SyncMetadataDao  // Add this
 }

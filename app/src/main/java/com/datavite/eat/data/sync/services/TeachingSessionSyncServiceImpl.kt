@@ -8,8 +8,8 @@ import com.datavite.eat.data.local.model.PendingOperation
 import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.data.mapper.TeachingSessionMapper
 import com.datavite.eat.data.remote.datasource.TeachingSessionRemoteDataSource
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.EntityType
+import com.datavite.eat.data.sync.OperationType
 import javax.inject.Inject
 
 class TeachingSessionSyncServiceImpl @Inject constructor(
@@ -135,12 +135,12 @@ class TeachingSessionSyncServiceImpl @Inject constructor(
 
         try {
             when (currentOperation.operationType) {
-                PendingOperationType.CREATE -> pushCreatedTeachingSessionAndResolveConflicts(session)
-                PendingOperationType.UPDATE -> pushUpdatedTeachingSessionAndResolveConflicts(session)
-                PendingOperationType.START_SESSION -> pushStartedTeachingSessionAndResolveConflicts(session)
-                PendingOperationType.END_SESSION -> pushEndedTeachingSessionAndResolveConflicts(session)
-                PendingOperationType.APPROVE_SESSION -> pushApproveTeachingSessionAndResolveConflicts(session)
-                PendingOperationType.DELETE -> pushDeletedTeachingSessionAndResolveConflicts(session)
+                OperationType.CREATE -> pushCreatedTeachingSessionAndResolveConflicts(session)
+                OperationType.UPDATE -> pushUpdatedTeachingSessionAndResolveConflicts(session)
+                OperationType.START_SESSION -> pushStartedTeachingSessionAndResolveConflicts(session)
+                OperationType.END_SESSION -> pushEndedTeachingSessionAndResolveConflicts(session)
+                OperationType.APPROVE_SESSION -> pushApproveTeachingSessionAndResolveConflicts(session)
+                OperationType.DELETE -> pushDeletedTeachingSessionAndResolveConflicts(session)
             }
 
             // Delete the completed operation
@@ -173,8 +173,8 @@ class TeachingSessionSyncServiceImpl @Inject constructor(
 
     }
 
-    override fun getEntity(): PendingOperationEntityType {
-        return PendingOperationEntityType.Session
+    override fun getEntity(): EntityType {
+        return EntityType.Session
     }
 
     override suspend fun pullAll(organization: String) {

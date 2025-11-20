@@ -1,6 +1,6 @@
-package com.datavite.eat.domain
+package com.datavite.eat.data.sync
 
-enum class PendingOperationType {
+enum class OperationType {
     CREATE,
     UPDATE,
     DELETE,

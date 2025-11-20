@@ -7,8 +7,8 @@ import com.datavite.eat.data.local.model.PendingOperation
 import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.data.mapper.StudentAttendanceMapper
 import com.datavite.eat.data.remote.datasource.StudentAttendanceRemoteDataSource
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.EntityType
+import com.datavite.eat.data.sync.OperationType
 import com.datavite.eat.domain.model.DomainStudentAttendance
 import com.datavite.eat.domain.repository.StudentAttendanceRepository
 import com.datavite.eat.utils.JsonConverter
@@ -33,8 +33,8 @@ class StudentAttendanceRepositoryImpl @Inject constructor (
             orgSlug = attendance.orgSlug,
             orgId = attendance.orgId,
             entityId = attendance.id,
-            entityType = PendingOperationEntityType.Attendance,
-            operationType = PendingOperationType.CREATE,
+            entityType = EntityType.Attendance,
+            operationType = OperationType.CREATE,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -52,8 +52,8 @@ class StudentAttendanceRepositoryImpl @Inject constructor (
             orgSlug = attendance.orgSlug,
             orgId = attendance.orgId,
             entityId = attendance.id,
-            entityType = PendingOperationEntityType.Attendance,
-            operationType = PendingOperationType.UPDATE,
+            entityType = EntityType.Attendance,
+            operationType = OperationType.UPDATE,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -71,8 +71,8 @@ class StudentAttendanceRepositoryImpl @Inject constructor (
             orgSlug = attendance.orgSlug,
             orgId = attendance.orgId,
             entityId = attendance.id,
-            entityType = PendingOperationEntityType.Attendance,
-            operationType = PendingOperationType.DELETE,
+            entityType = EntityType.Attendance,
+            operationType = OperationType.DELETE,
             payloadJson = JsonConverter.toJson(remote),
         )
 

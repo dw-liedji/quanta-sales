@@ -3,7 +3,6 @@ package com.datavite.eat.data.sync
 import android.util.Log
 import com.datavite.eat.data.local.dao.PendingOperationDao
 import com.datavite.eat.data.local.model.PendingOperation
-import com.datavite.eat.domain.PendingOperationEntityType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -28,7 +27,7 @@ class SyncOrchestrator @Inject constructor(
 
         if (operations.isEmpty()) return
 
-        val operationsByEntityType: Map<PendingOperationEntityType, List<PendingOperation>> =
+        val operationsByEntityType: Map<EntityType, List<PendingOperation>> =
             operations.groupBy { it.entityType }
 
         for (service in syncServices) {

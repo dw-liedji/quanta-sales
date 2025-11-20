@@ -10,13 +10,13 @@ import com.datavite.eat.data.mapper.BillingMapper
 import com.datavite.eat.data.remote.datasource.BillingRemoteDataSource
 import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.data.local.model.LocalBillingWithItemsAndPaymentsRelation
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.OperationType
 import com.datavite.eat.domain.model.DomainBilling
 import com.datavite.eat.domain.notification.NotificationBus
 import com.datavite.eat.domain.notification.NotificationEvent
 import com.datavite.eat.domain.repository.BillingRepository
 import com.datavite.eat.data.local.model.PendingOperation
+import com.datavite.eat.data.sync.EntityType
 import com.datavite.eat.utils.JsonConverter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -60,8 +60,8 @@ class BillingRepositoryImpl @Inject constructor(
             orgSlug = domainBilling.orgSlug,
             orgId  = domainBilling.orgId,
             entityId = domainBilling.id,
-            entityType = PendingOperationEntityType.Billing,
-            operationType = PendingOperationType.CREATE,
+            entityType = EntityType.Billing,
+            operationType = OperationType.CREATE,
             payloadJson = JsonConverter.toJson(remote)
         )
 
@@ -96,8 +96,8 @@ class BillingRepositoryImpl @Inject constructor(
             orgSlug = domainBilling.orgSlug,
             orgId = domainBilling.orgId,
             entityId = domainBilling.id,
-            entityType = PendingOperationEntityType.Billing,
-            operationType = PendingOperationType.UPDATE,
+            entityType = EntityType.Billing,
+            operationType = OperationType.UPDATE,
             payloadJson = JsonConverter.toJson(remote)
         )
 
@@ -128,8 +128,8 @@ class BillingRepositoryImpl @Inject constructor(
             orgSlug = domainBilling.orgSlug,
             orgId = domainBilling.orgId,
             entityId = domainBilling.id,
-            entityType = PendingOperationEntityType.Billing,
-            operationType = PendingOperationType.DELETE,
+            entityType = EntityType.Billing,
+            operationType = OperationType.DELETE,
             payloadJson = JsonConverter.toJson(remote)
         )
 

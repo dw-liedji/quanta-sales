@@ -11,8 +11,8 @@ import com.datavite.eat.data.local.model.PendingOperation
 import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.data.mapper.TeachingSessionMapper
 import com.datavite.eat.data.remote.datasource.TeachingSessionRemoteDataSource
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.EntityType
+import com.datavite.eat.data.sync.OperationType
 import com.datavite.eat.domain.model.DomainTeachingSession
 import com.datavite.eat.domain.notification.NotificationBus
 import com.datavite.eat.domain.notification.NotificationEvent
@@ -67,8 +67,8 @@ class TeachingSessionRepositoryImpl @Inject constructor(
             orgSlug = domainTeachingSession.orgSlug,
             orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
-            entityType = PendingOperationEntityType.Session,
-            operationType = PendingOperationType.CREATE,
+            entityType = EntityType.Session,
+            operationType = OperationType.CREATE,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -91,8 +91,8 @@ class TeachingSessionRepositoryImpl @Inject constructor(
             orgSlug = domainTeachingSession.orgSlug,
             orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
-            entityType = PendingOperationEntityType.Session,
-            operationType = PendingOperationType.UPDATE,
+            entityType = EntityType.Session,
+            operationType = OperationType.UPDATE,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -107,8 +107,8 @@ class TeachingSessionRepositoryImpl @Inject constructor(
             orgSlug = domainTeachingSession.orgSlug,
             orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
-            entityType = PendingOperationEntityType.Session,
-            operationType = PendingOperationType.DELETE,
+            entityType = EntityType.Session,
+            operationType = OperationType.DELETE,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -136,8 +136,8 @@ class TeachingSessionRepositoryImpl @Inject constructor(
             orgSlug = domainTeachingSession.orgSlug,
             orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
-            entityType = PendingOperationEntityType.Session,
-            operationType = PendingOperationType.APPROVE_SESSION,
+            entityType = EntityType.Session,
+            operationType = OperationType.APPROVE_SESSION,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -167,8 +167,8 @@ class TeachingSessionRepositoryImpl @Inject constructor(
             orgSlug = domainTeachingSession.orgSlug,
             orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
-            entityType = PendingOperationEntityType.Session,
-            operationType = PendingOperationType.START_SESSION,
+            entityType = EntityType.Session,
+            operationType = OperationType.START_SESSION,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -196,8 +196,8 @@ class TeachingSessionRepositoryImpl @Inject constructor(
             orgSlug = domainTeachingSession.orgSlug,
             orgId = domainTeachingSession.orgId,
             entityId = domainTeachingSession.id,
-            entityType = PendingOperationEntityType.Session,
-            operationType = PendingOperationType.END_SESSION,
+            entityType = EntityType.Session,
+            operationType = OperationType.END_SESSION,
             payloadJson = JsonConverter.toJson(remote),
         )
 

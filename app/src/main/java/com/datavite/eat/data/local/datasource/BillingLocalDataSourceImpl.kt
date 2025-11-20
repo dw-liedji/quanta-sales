@@ -18,6 +18,10 @@ class BillingLocalDataSourceImpl @Inject constructor (
         return localBillingDao.getBillingsWithItemsAndPaymentsRelationsFlow()
     }
 
+    override suspend fun getLocalBillingIds(): List<String> {
+        return localBillingDao.getLocalBillingIds()
+    }
+
     override suspend fun getLocalBillingWithItemsAndPaymentsRelationById(billingId: String): LocalBillingWithItemsAndPaymentsRelation? {
         return localBillingDao.getBillingWithItemsAndPaymentsRelationById(billingId)
     }

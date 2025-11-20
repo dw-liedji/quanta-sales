@@ -10,8 +10,8 @@ import com.datavite.eat.data.local.model.PendingOperation
 import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.data.mapper.CustomerMapper
 import com.datavite.eat.data.remote.datasource.CustomerRemoteDataSource
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.EntityType
+import com.datavite.eat.data.sync.OperationType
 import com.datavite.eat.domain.model.DomainCustomer
 import com.datavite.eat.domain.notification.NotificationBus
 import com.datavite.eat.domain.notification.NotificationEvent
@@ -55,8 +55,8 @@ class CustomerRepositoryImpl @Inject constructor(
             orgSlug = domainCustomer.orgSlug,
             orgId = domainCustomer.orgId,
             entityId = domainCustomer.id,
-            entityType = PendingOperationEntityType.Customer,
-            operationType = PendingOperationType.CREATE,
+            entityType = EntityType.Customer,
+            operationType = OperationType.CREATE,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -89,8 +89,8 @@ class CustomerRepositoryImpl @Inject constructor(
             orgSlug = domainCustomer.orgSlug,
             orgId = domainCustomer.orgId,
             entityId = domainCustomer.id,
-            entityType = PendingOperationEntityType.Customer,
-            operationType = PendingOperationType.UPDATE,
+            entityType = EntityType.Customer,
+            operationType = OperationType.UPDATE,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -108,8 +108,8 @@ class CustomerRepositoryImpl @Inject constructor(
             orgSlug = domainCustomer.orgSlug,
             orgId = domainCustomer.orgId,
             entityId = domainCustomer.id,
-            entityType = PendingOperationEntityType.Customer,
-            operationType = PendingOperationType.DELETE,
+            entityType = EntityType.Customer,
+            operationType = OperationType.DELETE,
             payloadJson = JsonConverter.toJson(remote),
         )
 

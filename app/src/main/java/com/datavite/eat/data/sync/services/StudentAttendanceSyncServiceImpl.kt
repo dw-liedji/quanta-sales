@@ -8,8 +8,8 @@ import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.data.mapper.StudentAttendanceMapper
 import com.datavite.eat.data.remote.datasource.StudentAttendanceRemoteDataSource
 import com.datavite.eat.data.remote.model.RemoteStudentAttendance
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.EntityType
+import com.datavite.eat.data.sync.OperationType
 import javax.inject.Inject
 
 class StudentAttendanceSyncServiceImpl @Inject constructor (
@@ -46,8 +46,8 @@ class StudentAttendanceSyncServiceImpl @Inject constructor (
         return localDataSource.getAttendanceCount() != 0
     }
 
-    override fun getEntity(): PendingOperationEntityType {
-        return PendingOperationEntityType.Attendance
+    override fun getEntity(): EntityType {
+        return EntityType.Attendance
     }
 
 
@@ -106,13 +106,13 @@ class StudentAttendanceSyncServiceImpl @Inject constructor (
 
         try {
             when (currentOperation.operationType) {
-                PendingOperationType.CREATE -> {
+                OperationType.CREATE -> {
                     pushCreatedAttendanceAndResolveConflicts(attendance)
                 }
-                PendingOperationType.UPDATE -> {
+                OperationType.UPDATE -> {
                     pushUpdatedAttendanceAndResolveConflicts(attendance)
                 }
-                PendingOperationType.DELETE -> {
+                OperationType.DELETE -> {
                     pushDeletedAttendanceAndResolveConflicts(attendance)
                 }
                 else -> {}

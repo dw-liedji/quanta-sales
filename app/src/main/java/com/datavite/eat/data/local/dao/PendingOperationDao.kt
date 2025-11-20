@@ -5,8 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.datavite.eat.data.local.model.PendingOperation
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.EntityType
+import com.datavite.eat.data.sync.OperationType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -40,10 +40,10 @@ interface PendingOperationDao {
         AND operationType = :operationType
     """)
     suspend fun deleteByKeys(
-        entityType: PendingOperationEntityType,
+        entityType: EntityType,
         entityId: String,
         orgId: String,
-        operationType: PendingOperationType
+        operationType: OperationType
     )
 
     // 🔥 Increment failure count
@@ -56,10 +56,10 @@ interface PendingOperationDao {
         AND operationType = :operationType
     """)
     suspend fun incrementFailureCount(
-        entityType: PendingOperationEntityType,
+        entityType: EntityType,
         entityId: String,
         orgId: String,
-        operationType: PendingOperationType
+        operationType: OperationType
     )
 
     // 🔥 Required for some logic (get failure count)
@@ -71,10 +71,10 @@ interface PendingOperationDao {
         AND operationType = :operationType
     """)
     suspend fun getFailureCount(
-        entityType: PendingOperationEntityType,
+        entityType: EntityType,
         entityId: String,
         orgId: String,
-        operationType: PendingOperationType
+        operationType: OperationType
     ): Int
 
     // 🔥 Monitoring flows

@@ -10,8 +10,8 @@ import com.datavite.eat.data.local.model.PendingOperation
 import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.data.mapper.StockMapper
 import com.datavite.eat.data.remote.datasource.StockRemoteDataSource
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.EntityType
+import com.datavite.eat.data.sync.OperationType
 import com.datavite.eat.domain.model.DomainStock
 import com.datavite.eat.domain.notification.NotificationBus
 import com.datavite.eat.domain.notification.NotificationEvent
@@ -55,8 +55,8 @@ class StockRepositoryImpl @Inject constructor(
             orgSlug = domainStock.orgSlug,
             orgId = domainStock.orgId,
             entityId = domainStock.id,
-            entityType = PendingOperationEntityType.Stock,
-            operationType = PendingOperationType.CREATE,
+            entityType = EntityType.Stock,
+            operationType = OperationType.CREATE,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -79,8 +79,8 @@ class StockRepositoryImpl @Inject constructor(
             orgSlug = domainStock.orgSlug,
             orgId = domainStock.orgId,
             entityId = domainStock.id,
-            entityType = PendingOperationEntityType.Stock,
-            operationType = PendingOperationType.UPDATE,
+            entityType = EntityType.Stock,
+            operationType = OperationType.UPDATE,
             payloadJson = JsonConverter.toJson(remote),
         )
 
@@ -98,8 +98,8 @@ class StockRepositoryImpl @Inject constructor(
             orgSlug = domainStock.orgSlug,
             orgId = domainStock.orgId,
             entityId = domainStock.id,
-            entityType = PendingOperationEntityType.Stock,
-            operationType = PendingOperationType.DELETE,
+            entityType = EntityType.Stock,
+            operationType = OperationType.DELETE,
             payloadJson = JsonConverter.toJson(remote),
         )
 

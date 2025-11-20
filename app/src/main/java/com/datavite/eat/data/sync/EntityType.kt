@@ -1,10 +1,11 @@
-package com.datavite.eat.domain
+package com.datavite.eat.data.sync
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+
 @Serializable
-enum class PendingOperationEntityType (val fetchOrder: Int) {
+enum class EntityType (val fetchOrder: Int) {
     @SerialName("attendance")
     Attendance(fetchOrder = 6),
     @SerialName("session")

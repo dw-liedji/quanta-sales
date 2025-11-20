@@ -8,10 +8,11 @@ import com.datavite.eat.data.local.model.PendingOperation
 import com.datavite.eat.data.local.model.SyncStatus
 import com.datavite.eat.data.mapper.StockMapper
 import com.datavite.eat.data.remote.datasource.StockRemoteDataSource
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.EntityType
+import com.datavite.eat.data.sync.OperationType
 import retrofit2.HttpException
-import java.net.HttpURLConnection.HTTP_NOT_FOUND
+import java.io.IOException
+import java.net.HttpURLConnection.*
 import javax.inject.Inject
 
 class StockSyncServiceImpl @Inject constructor(
@@ -31,7 +32,7 @@ class StockSyncServiceImpl @Inject constructor(
             localDataSource.insertLocalStock(syncedLocal)
             Log.i("StockSync", "Successfully synced created stock ${remoteStock.id}")
         } catch (e: Exception) {
-            Log.e("StockSync", "Failed to sync created stock ${remoteStock.id}", e)
+            handleStockSyncException(e, remoteStock.id, "CREATE")
             throw e
         }
     }
@@ -46,13 +47,8 @@ class StockSyncServiceImpl @Inject constructor(
             localDataSource.insertLocalStock(syncedLocal)
             Log.i("StockSync", "Successfully synced updated stock ${remoteStock.id}")
         } catch (e: Exception) {
-            if (e.isNotFoundError()) {
-                // Object deleted on server - remove locally
-                handleDeletedStock(remoteStock.id, "update")
-            } else {
-                Log.e("StockSync", "Failed to sync updated stock ${remoteStock.id}", e)
-                throw e
-            }
+            handleStockSyncException(e, remoteStock.id, "UPDATE")
+            throw e
         }
     }
 
@@ -61,14 +57,104 @@ class StockSyncServiceImpl @Inject constructor(
             remoteDataSource.deleteRemoteStock(remoteStock.orgSlug, remoteStock.id)
             Log.i("StockSync", "Successfully synced deleted stock ${remoteStock.id}")
         } catch (e: Exception) {
-            if (e.isNotFoundError()) {
-                // Object already deleted on server - remove locally
-                handleDeletedStock(remoteStock.id, "delete")
-            } else {
-                Log.e("StockSync", "Failed to sync deleted stock ${remoteStock.id}", e)
-                throw e
-            }
+            handleStockSyncException(e, remoteStock.id, "DELETE")
+            throw e
         }
+    }
+
+    // --- Comprehensive Exception Handling ---
+    private suspend fun handleStockSyncException(e: Exception, stockId: String, operation: String) {
+        when (e) {
+            is HttpException -> {
+                when (e.code()) {
+                    HTTP_NOT_FOUND -> handleNotFound(stockId, operation)
+                    HTTP_CONFLICT -> handleConflict(stockId, operation)
+                    HTTP_UNAVAILABLE -> handleServiceUnavailable(stockId, operation)
+                    HTTP_INTERNAL_ERROR -> handleServerError(stockId, operation)
+                    HTTP_BAD_REQUEST -> handleBadRequest(stockId, operation)
+                    HTTP_UNAUTHORIZED -> handleUnauthorized(stockId, operation)
+                    HTTP_FORBIDDEN -> handleForbidden(stockId, operation)
+                    HTTP_BAD_GATEWAY -> handleBadGateway(stockId, operation)
+                    HTTP_GATEWAY_TIMEOUT -> handleGatewayTimeout(stockId, operation)
+                    in 400..499 -> handleClientError(stockId, operation, e.code())
+                    in 500..599 -> handleServerError(stockId, operation, e.code())
+                    else -> handleGenericHttpError(stockId, operation, e.code())
+                }
+            }
+            is IOException -> handleNetworkError(stockId, operation, e)
+            else -> handleUnknownError(stockId, operation, e)
+        }
+    }
+
+    // --- HTTP Status Code Handlers ---
+    private suspend fun handleNotFound(stockId: String, operation: String) {
+        Log.i("StockSync", "Stock $stockId not found during $operation - removing locally")
+        // Object deleted on server - remove locally
+        handleDeletedStock(stockId, operation)
+    }
+
+    private fun handleConflict(stockId: String, operation: String) {
+        Log.w("StockSync", "Conflict detected for stock $stockId during $operation - requires resolution")
+        // TODO: Implement conflict resolution logic
+        // This could trigger a manual merge or use last-write-wins strategy
+    }
+
+    private fun handleServiceUnavailable(stockId: String, operation: String) {
+        Log.w("StockSync", "Service unavailable for stock $stockId during $operation - retry later")
+        // Server is down - will retry on next sync cycle
+    }
+
+    private fun handleServerError(stockId: String, operation: String, statusCode: Int? = null) {
+        val codeInfo = if (statusCode != null) " (code: $statusCode)" else ""
+        Log.e("StockSync", "Server error for stock $stockId during $operation$codeInfo")
+        // Internal server error - retry with exponential backoff
+    }
+
+    private fun handleBadRequest(stockId: String, operation: String) {
+        Log.e("StockSync", "Bad request for stock $stockId during $operation - check data format")
+        // Invalid request - likely data format issue
+    }
+
+    private fun handleUnauthorized(stockId: String, operation: String) {
+        Log.e("StockSync", "Unauthorized for stock $stockId during $operation - authentication required")
+        // Token expired or invalid - trigger reauthentication
+        // eventBus.post(AuthenticationRequiredEvent())
+    }
+
+    private fun handleForbidden(stockId: String, operation: String) {
+        Log.e("StockSync", "Forbidden for stock $stockId during $operation - insufficient permissions")
+        // User doesn't have permission - should not retry
+    }
+
+    private fun handleBadGateway(stockId: String, operation: String) {
+        Log.w("StockSync", "Bad gateway for stock $stockId during $operation - retry later")
+        // Proxy/gateway issue - retry with backoff
+    }
+
+    private fun handleGatewayTimeout(stockId: String, operation: String) {
+        Log.w("StockSync", "Gateway timeout for stock $stockId during $operation - retry later")
+        // Gateway timeout - retry with backoff
+    }
+
+    private fun handleClientError(stockId: String, operation: String, statusCode: Int) {
+        Log.e("StockSync", "Client error $statusCode for stock $stockId during $operation")
+        // Other 4xx errors - likely client-side issue
+    }
+
+    private fun handleGenericHttpError(stockId: String, operation: String, statusCode: Int) {
+        Log.e("StockSync", "HTTP error $statusCode for stock $stockId during $operation")
+        // Unhandled HTTP status code
+    }
+
+    // --- Network and Generic Error Handlers ---
+    private fun handleNetworkError(stockId: String, operation: String, e: IOException) {
+        Log.w("StockSync", "Network error for stock $stockId during $operation: ${e.message}")
+        // Network connectivity issue - will retry when connection restored
+    }
+
+    private fun handleUnknownError(stockId: String, operation: String, e: Exception) {
+        Log.e("StockSync", "Unknown error for stock $stockId during $operation: ${e.message}", e)
+        // Unexpected error - log for debugging
     }
 
     // --- Handle deleted stock (404 scenario) ---
@@ -110,12 +196,11 @@ class StockSyncServiceImpl @Inject constructor(
 
         try {
             when (currentOperation.operationType) {
-                PendingOperationType.CREATE -> pushCreatedStockAndResolveConflicts(session)
-                PendingOperationType.UPDATE -> pushUpdatedStockAndResolveConflicts(session)
-                PendingOperationType.START_SESSION -> {}
-                PendingOperationType.END_SESSION -> {}
-                PendingOperationType.APPROVE_SESSION -> {}
-                PendingOperationType.DELETE -> pushDeletedStockAndResolveConflicts(session)
+                OperationType.CREATE -> pushCreatedStockAndResolveConflicts(session)
+                OperationType.UPDATE -> pushUpdatedStockAndResolveConflicts(session)
+                OperationType.START_SESSION -> {}
+                OperationType.END_SESSION -> {}
+                OperationType.DELETE -> pushDeletedStockAndResolveConflicts(session)
                 else -> {
                     Log.w("StockSync", "Unsupported operation type: ${currentOperation.operationType}")
                 }
@@ -137,7 +222,8 @@ class StockSyncServiceImpl @Inject constructor(
 
         } catch (e: Exception) {
             // Don't increment failure count for 404 errors (they're handled successfully)
-            if (!e.isNotFoundError()) {
+            val isNotFoundError = e is HttpException && e.code() == HTTP_NOT_FOUND
+            if (!isNotFoundError) {
                 pendingOperationDao.incrementFailureCount(
                     entityType = currentOperation.entityType,
                     entityId = currentOperation.entityId,
@@ -162,8 +248,8 @@ class StockSyncServiceImpl @Inject constructor(
         }
     }
 
-    override fun getEntity(): PendingOperationEntityType {
-        return PendingOperationEntityType.Session
+    override fun getEntity(): EntityType {
+        return EntityType.Session
     }
 
     override suspend fun pullAll(organization: String) {
@@ -178,13 +264,8 @@ class StockSyncServiceImpl @Inject constructor(
             localDataSource.saveLocalStocks(localSessions)
             Log.i("StockSync", "Full sync completed: ${localSessions.size} stocks")
         } catch (e: Exception) {
-            Log.e("StockSync", "Full sync failed: ${e.message}", e)
+            handleStockSyncException(e, "ALL", "PULL_ALL")
             throw e
         }
-    }
-
-    // --- Extension for 404 detection ---
-    private fun Exception.isNotFoundError(): Boolean {
-        return (this as? HttpException)?.code() == HTTP_NOT_FOUND
     }
 }

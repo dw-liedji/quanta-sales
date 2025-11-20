@@ -1,9 +1,8 @@
 package com.datavite.eat.data.local.model
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
-import com.datavite.eat.domain.PendingOperationEntityType
-import com.datavite.eat.domain.PendingOperationType
+import com.datavite.eat.data.sync.EntityType
+import com.datavite.eat.data.sync.OperationType
 import kotlinx.serialization.json.Json
 
 @Entity(
@@ -11,11 +10,11 @@ import kotlinx.serialization.json.Json
     primaryKeys = ["entityType", "entityId", "orgId", "operationType"]
 )
 data class PendingOperation(
-    val entityType: PendingOperationEntityType,
+    val entityType: EntityType,
     val entityId: String,
     val orgSlug: String,
     val orgId: String,
-    val operationType: PendingOperationType,
+    val operationType: OperationType,
     val payloadJson: String,
     val createdAt: Long = System.currentTimeMillis(),
     val failedAttempts: Int = 0

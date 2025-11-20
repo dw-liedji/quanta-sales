@@ -65,7 +65,7 @@ class CustomerLocalDataSourceImpl @Inject constructor (
         localCustomerDao.deleteLocalCustomer(localCustomer.id)
     }
 
-    override suspend fun deleteLocalTransactionById(transactionId: String) {
+    override suspend fun deleteLocalCustomerById(transactionId: String) {
         localCustomerDao.deleteLocalCustomer(transactionId)
     }
 

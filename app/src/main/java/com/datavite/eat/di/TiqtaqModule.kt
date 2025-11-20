@@ -26,6 +26,7 @@ import com.datavite.eat.data.local.dao.PendingNotificationDao
 import com.datavite.eat.data.local.dao.PendingOperationDao
 import com.datavite.eat.data.local.dao.RoomDao
 import com.datavite.eat.data.local.dao.StudentAttendanceDao
+import com.datavite.eat.data.local.dao.SyncMetadataDao
 import com.datavite.eat.data.local.dao.TeachingPeriodDao
 import com.datavite.eat.data.local.dao.WorkingPeriodDao
 import com.datavite.eat.data.local.datasource.BillingLocalDataSource
@@ -64,6 +65,7 @@ import com.datavite.eat.data.local.datasource.WorkingPeriodLocalDataSource
 import com.datavite.eat.data.local.datasource.WorkingPeriodLocalDataSourceImpl
 import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
 import com.datavite.eat.data.local.datastore.UserCredentialManager
+import com.datavite.eat.data.local.model.SyncMetadata
 import com.datavite.eat.data.location.geofence.GeofenceLocationDataStore
 import com.datavite.eat.data.location.geofence.GeofenceRepository
 import com.datavite.eat.data.mapper.BillingItemMapper
@@ -163,6 +165,7 @@ import com.datavite.eat.data.repository.TeachingSessionRepositoryImpl
 import com.datavite.eat.data.repository.TransactionRepositoryImpl
 import com.datavite.eat.data.repository.WorkingPeriodRepositoryImpl
 import com.datavite.eat.data.speech.SpeechRecognitionManager
+import com.datavite.eat.data.sync.SyncMetadataManager
 import com.datavite.eat.data.sync.SyncOrchestrator
 import com.datavite.eat.data.sync.SyncService
 import com.datavite.eat.data.sync.services.BillingSyncService
@@ -941,18 +944,17 @@ object TiqtaqModule {
     fun provideAppStartupInitializer(
         @ApplicationContext context: Context,
         networkStatusMonitor: NetworkStatusMonitor,
+        syncMetadataManager: SyncMetadataManager,
         authOrgUserCredentialManager: AuthOrgUserCredentialManager,
         @ApplicationScope scope: CoroutineScope,
     ) : AppStartupInitializer {
         return AppStartupInitializer(
             context=context,
             networkStatusMonitor=networkStatusMonitor,
+            syncMetadataManager = syncMetadataManager,
             authOrgUserCredentialManager,
             scope=scope)
     }
-
-
-
 
     @Provides
     @Singleton
@@ -1210,16 +1212,31 @@ object TiqtaqModule {
 
     @Provides
     @Singleton
+    fun provideSyncMetadataDao(database: AppDatabase): SyncMetadataDao {
+        return database.syncMetadataDao()
+    }
+    @Provides
+    @Singleton
+    fun provideSyncMetadataManager(
+        syncMetadataDao: SyncMetadataDao
+    ): SyncMetadataManager {
+        return SyncMetadataManager(syncMetadataDao)
+    }
+
+    @Provides
+    @Singleton
     fun provideBillingSyncService(
         remoteDataSource: BillingRemoteDataSource,
         localDataSource: BillingLocalDataSource,
         billingMapper: BillingMapper,
+        syncMetadataDao: SyncMetadataDao,
         pendingOperationDao: PendingOperationDao,
     ): BillingSyncService {
         return BillingSyncServiceImpl(
             remoteDataSource = remoteDataSource,
             localDataSource = localDataSource,
             billingMapper = billingMapper,
+            syncMetadataDao = syncMetadataDao,
             pendingOperationDao = pendingOperationDao,
         )
     }

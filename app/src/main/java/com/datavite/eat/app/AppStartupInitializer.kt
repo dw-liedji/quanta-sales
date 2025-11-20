@@ -5,6 +5,7 @@ import android.util.Log
 import com.datavite.eat.data.local.datastore.AuthOrgUserCredentialManager
 import com.datavite.eat.data.network.NetworkStatusMonitor
 import com.datavite.eat.data.sync.PushSyncWorker
+import com.datavite.eat.data.sync.SyncMetadataManager
 import com.datavite.eat.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
@@ -21,11 +22,10 @@ import kotlinx.coroutines.launch
 class AppStartupInitializer @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val networkStatusMonitor: NetworkStatusMonitor,
+    private val syncMetadataManager: SyncMetadataManager,
     private val authOrgUserCredentialManager: AuthOrgUserCredentialManager,
     @param:ApplicationScope private val scope: CoroutineScope,
 ) {
-
-
 
     @OptIn(FlowPreview::class)
     fun setupWork() {
@@ -33,6 +33,8 @@ class AppStartupInitializer @Inject constructor(
         scope.launch(Dispatchers.IO) {
             authOrgUserCredentialManager.sharedAuthOrgUserFlow.collectLatest { authOrgUser ->
                authOrgUser?.let {
+                   syncMetadataManager.ensureInitialized()
+                   Log.i("AppStartupInitializer", "AppStartupInitializer enqueue SyncOrchestratorWorker Periodic $it")
                    PushSyncWorker.MultiSyncScheduler.schedulePeriodicSync(context, it.orgSlug, 30)
                }
             }

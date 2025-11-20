@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface BillingLocalDataSource {
         fun getLocalBillingsWithItemsAndPaymentsRelationsFlow(): Flow<List<LocalBillingWithItemsAndPaymentsRelation>>
+        suspend fun getLocalBillingIds(): List<String>
         suspend fun getLocalBillingWithItemsAndPaymentsRelationById(billingId: String): LocalBillingWithItemsAndPaymentsRelation?
         suspend fun getLocalBillingCount(): Int
         suspend fun clear()
