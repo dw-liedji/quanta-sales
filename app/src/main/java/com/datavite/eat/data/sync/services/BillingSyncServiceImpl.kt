@@ -319,11 +319,14 @@ class BillingSyncServiceImpl @Inject constructor(
         val domainBillings = remoteBillings.map { billingMapper.mapRemoteToDomain(it) }
         val localEntities = domainBillings.map { billingMapper.mapDomainToLocalBillingWithItemsAndPaymentsRelation(it) }
 
-        // Clear existing data and insert new
-        localDataSource.clear()
+        //  insert new
         localEntities.forEach {
             localDataSource.insertLocalBillingWithItemsAndPaymentsRelation(it)
         }
+
+        // Clear existing data
+        cleanupDeletedBillings(organization, remoteBillings.map { it.id })
+
 
         Log.i("BillingSync", "Full sync completed: ${localEntities.size} billings")
     }
@@ -383,6 +386,67 @@ class BillingSyncServiceImpl @Inject constructor(
             updateLastSyncTimestamp(lastSync ?: 0L, false, syncError)
             Log.e("BillingSync", "Sync failed after all attempts")
             throw RuntimeException("Sync failed: $syncError")
+        }
+    }
+
+    private suspend fun cleanupDeletedBillings(
+        organization: String,
+        allRemoteIds: List<String>, // Just pass IDs, not full objects
+        maxDeletions: Int = 500
+    ): CleanupResult {
+        try {
+            Log.d("BillingSync", "Starting deletion cleanup for $organization...")
+
+            val localIds = localDataSource.getLocalBillingIds().toSet()
+            val remoteIdsSet = allRemoteIds.toSet()
+            val deletedIds = localIds - remoteIdsSet
+
+            return if (deletedIds.isNotEmpty()) {
+                // Apply safety limit
+                val idsToDelete = if (deletedIds.size > maxDeletions) {
+                    Log.w("BillingSync", "Too many deletions (${deletedIds.size}), limiting to $maxDeletions")
+                    deletedIds.take(maxDeletions)
+                } else {
+                    deletedIds.toList() // Convert back to list for consistent type
+                }
+
+                Log.i("BillingSync", "Found ${deletedIds.size} billings to delete (processing ${idsToDelete.size})")
+
+                // Batch deletion for better performance
+                idsToDelete.forEach { deletedId ->
+                    localDataSource.deleteLocalBillingById(deletedId)
+                }
+
+                CleanupResult(
+                    success = true,
+                    deletedCount = idsToDelete.size,
+                    totalFound = deletedIds.size,
+                    limited = deletedIds.size > maxDeletions
+                ).also {
+                    Log.i("BillingSync", "Deletion cleanup completed: $it")
+                }
+
+            } else {
+                CleanupResult(success = true, deletedCount = 0).also {
+                    Log.d("BillingSync", "No deleted billings found")
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.e("BillingSync", "Failed during deletion cleanup", e)
+            return CleanupResult(success = false, error = e.message)
+        }
+    }
+
+    data class CleanupResult(
+        val success: Boolean,
+        val deletedCount: Int = 0,
+        val totalFound: Int = 0,
+        val limited: Boolean = false,
+        val error: String? = null
+    ) {
+        override fun toString(): String {
+            return "CleanupResult(deleted=$deletedCount, totalFound=$totalFound, limited=$limited, success=$success)"
         }
     }
 }
